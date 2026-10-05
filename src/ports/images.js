@@ -33,8 +33,9 @@ async function download(url) {
 }
 
 // Guarda las imágenes que falten y borra las más antiguas si se pasa del
-// espacio reservado. Devuelve cuántas guardó.
-export async function cacheImages(urls) {
+// espacio reservado. Devuelve cuántas guardó. Con `pin`, las deja fijadas: son
+// de un artículo guardado y no se borran para hacer sitio.
+export async function cacheImages(urls, { pin = false } = {}) {
     if (!native) return 0;
     const pending = [...new Set(urls)].filter((u) => !index.has(u));
     let saved = 0;
@@ -50,8 +51,32 @@ export async function cacheImages(urls) {
         index.delete(entry.url);
         await Filesystem.deleteFile({ path: entry.path, directory: Directory.Data }).catch(() => {});
     }
-    if (saved) await persist();
+    let changed = saved > 0;
+    if (pin) {
+        for (const url of urls) {
+            const entry = index.get(url);
+            if (entry && !entry.pin) {
+                entry.pin = true;
+                changed = true;
+            }
+        }
+    }
+    if (changed) await persist();
     return saved;
+}
+
+// Suelta las imágenes de un artículo que deja de estar guardado.
+export async function unpinImages(urls) {
+    if (!native) return;
+    let changed = false;
+    for (const url of urls) {
+        const entry = index.get(url);
+        if (entry?.pin) {
+            delete entry.pin;
+            changed = true;
+        }
+    }
+    if (changed) await persist();
 }
 
 export async function clearImages() {

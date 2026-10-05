@@ -13,12 +13,13 @@ export function imagesOf(article, html = '') {
     return [...new Set(urls.filter((u) => /^https:/i.test(u || '')))].slice(0, PER_ARTICLE);
 }
 
-// entries: [{ url, size, at }]. Devuelve las que hay que borrar (las más
-// antiguas) para que el total quepa en el presupuesto.
+// entries: [{ url, size, at, pin }]. Devuelve las que hay que borrar (las más
+// antiguas) para que el total quepa en el presupuesto. Las fijadas (`pin`:
+// fotos de artículos guardados) no se tocan.
 export function planEviction(entries, budget = IMAGE_BUDGET) {
     let total = entries.reduce((sum, e) => sum + e.size, 0);
     const out = [];
-    for (const entry of [...entries].sort((a, b) => a.at - b.at)) {
+    for (const entry of entries.filter((e) => !e.pin).sort((a, b) => a.at - b.at)) {
         if (total <= budget) break;
         out.push(entry);
         total -= entry.size;

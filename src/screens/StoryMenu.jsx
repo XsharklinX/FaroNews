@@ -1,16 +1,17 @@
 // Menú de una historia (pulsación larga) y hoja para comparar cómo titula
 // cada fuente la misma noticia.
 
-import { useState } from 'react';
 import { relTime } from '../core/text.js';
 import { titleWords } from '../core/today.js';
 import { actions, sourceOf, useStore } from '../data/store.js';
 import { shareLink } from '../ports/share.js';
-import { Monogram, Sheet } from '../ui/bits.jsx';
+import Icon from '../ui/Icon.jsx';
+import { StoryMeta } from '../ui/StoryRow.jsx';
+import { Monogram, Sheet, Thumb } from '../ui/bits.jsx';
+import { Group, Row } from '../ui/settings.jsx';
 
 export function StoryMenu({ id, onOpen }) {
     const { articles, sources, settings } = useStore();
-    const [mode, setMode] = useState(null); // 'silenciar' | 'tema'
     const article = articles.find((a) => a.id === id);
     const source = sourceOf(article, new Map(sources.map((s) => [s.id, s])));
     if (!article || !source) return null;
@@ -22,68 +23,67 @@ export function StoryMenu({ id, onOpen }) {
         close();
         fn();
     };
+    // Las cuatro cosas que más se hacen con una historia, a un toque.
+    const quick = [
+        { icon: 'todo', label: 'Leer', go: run(() => onOpen(article.id)) },
+        { icon: 'guardado', label: article.saved ? 'Guardada' : 'Guardar', on: article.saved, go: run(() => actions.toggleSaved(article.id)) },
+        { icon: 'compartir', label: 'Enviar', go: run(() => shareLink({ title: article.title, url: article.url })) },
+        { icon: 'ok', label: article.read ? 'No leída' : 'Leída', go: run(() => actions.markRead(article.id, !article.read)) },
+    ];
 
     return (
-        <Sheet title="Esta historia" subtitle={article.title} onClose={close}>
-            <div className="card list">
-                <button type="button" className="line-btn" onClick={run(() => onOpen(article.id))}>
-                    <span>Leer</span>
-                    <span className="sub-s">{article.minutes} min</span>
-                </button>
-                <button type="button" className="line-btn" onClick={run(() => actions.toggleSaved(article.id))}>
-                    <span>{article.saved ? 'Quitar de Guardado' : 'Guardar para luego'}</span>
-                </button>
-                <button type="button" className="line-btn" onClick={run(() => shareLink({ title: article.title, url: article.url }))}>
-                    <span>Compartir</span>
-                </button>
+        <Sheet title="Esta historia" onClose={close}>
+            <div className="menu-story">
+                <div className="story-text">
+                    <span className="story-title">{article.title}</span>
+                    <StoryMeta article={article} source={source} />
+                </div>
+                <Thumb src={article.image} className="story-thumb" />
             </div>
 
-            <div className="block">
-                <h3 className="label">Afinar Hoy</h3>
-                <div className="card list">
-                    {!source.loose && (
-                        <button type="button" className="line-btn" onClick={run(() => actions.lessOf(source.id))}>
-                            <span>Menos de {source.title}</span>
-                            <span className="sub-s">baja su nivel</span>
-                        </button>
-                    )}
-                    <button type="button" className="line-btn" aria-expanded={mode === 'silenciar'} onClick={() => setMode(mode === 'silenciar' ? null : 'silenciar')}>
-                        <span>Silenciar una palabra</span>
-                        <span className="sub-s">no vuelve a entrar en Hoy</span>
+            <div className="quick">
+                {quick.map((q) => (
+                    <button key={q.label} type="button" aria-pressed={Boolean(q.on)} onClick={q.go}>
+                        <Icon name={q.icon} size={22} strokeWidth={1.8} filled={Boolean(q.on)} />
+                        {q.label}
                     </button>
-                    <button type="button" className="line-btn" aria-expanded={mode === 'tema'} onClick={() => setMode(mode === 'tema' ? null : 'tema')}>
-                        <span>Seguir como tema</span>
-                        <span className="sub-s">entra siempre en Hoy</span>
-                    </button>
-                </div>
-                {mode && (
+                ))}
+            </div>
+
+            <Group title="Afinar Hoy">
+                {!source.loose && <Row icon="subir" flip title={`Menos de ${source.title}`} value="baja su nivel" onClick={run(() => actions.lessOf(source.id))} />}
+                <Row icon="silenciar" title="Silenciar una palabra" value="no vuelve a Hoy">
+                    <div className="chips">
+                        {words.map((w) => (
+                            <button key={w} type="button" className="chip-btn" onClick={run(() => actions.muteWord(w))}>
+                                {w}
+                            </button>
+                        ))}
+                    </div>
+                    {words.length === 0 && <p className="hint">Este titular no tiene palabras que sirvan para eso.</p>}
+                </Row>
+                <Row icon="destello" title="Seguir como tema" value="entra siempre">
                     <div className="chips">
                         {words.map((w) => (
                             <button
                                 key={w}
                                 type="button"
                                 className="chip-btn"
-                                disabled={mode === 'tema' && followed.has(w.toLowerCase())}
+                                disabled={followed.has(w.toLowerCase())}
                                 onClick={run(() => {
-                                    if (mode === 'silenciar') {
-                                        actions.muteWord(w);
-                                    } else {
-                                        actions.saveTopic({ name: w, words: [w] });
-                                        actions.toast(`Sigues el tema «${w}»`);
-                                    }
+                                    actions.saveTopic({ name: w, words: [w] });
+                                    actions.toast(`Sigues el tema «${w}»`);
                                 })}
                             >
                                 {w}
                             </button>
                         ))}
-                        {words.length === 0 && <p className="hint">Este titular no tiene palabras que sirvan para eso.</p>}
                     </div>
-                )}
-            </div>
-
-            <button type="button" className="btn-ghost" onClick={run(() => actions.dismiss(article.id))}>
-                Descartar esta historia
-            </button>
+                    {words.length === 0 && <p className="hint">Este titular no tiene palabras que sirvan para eso.</p>}
+                </Row>
+                {article.saved && <Row icon="editar" title="Etiquetas" value={(article.tags || []).join(', ') || 'ninguna'} onClick={run(() => actions.openTags(article.id))} />}
+                <Row icon="cerrar" title="Descartar esta historia" danger onClick={run(() => actions.dismiss(article.id))} />
+            </Group>
         </Sheet>
     );
 }

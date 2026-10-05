@@ -52,9 +52,9 @@ export function Thumb({ src, className }) {
 }
 
 export const LEVELS = [
-    { id: 'todo', label: 'Entra todo', hint: 'Cada artículo puede entrar en Hoy.' },
-    { id: 'importante', label: 'Solo lo importante', hint: 'Entra lo que coincide con tus temas o lo que cubren varias fuentes. Lo demás, solo si sobra sitio.' },
-    { id: 'alertas', label: 'Solo tus temas', hint: 'El sitio queda en silencio salvo que mencione uno de tus temas.' },
+    { id: 'todo', label: 'Entra todo', short: 'Todo', hint: 'Cada artículo puede entrar en Hoy.' },
+    { id: 'importante', label: 'Solo lo importante', short: 'Lo importante', hint: 'Entra lo que coincide con tus temas o lo que cubren varias fuentes. Lo demás, solo si sobra sitio.' },
+    { id: 'alertas', label: 'Solo tus temas', short: 'Tus temas', hint: 'El sitio queda en silencio salvo que mencione uno de tus temas.' },
 ];
 const BARS = { todo: 3, importante: 2, alertas: 1 };
 
@@ -73,11 +73,11 @@ export function LevelMeter({ level, big = false }) {
 export function LevelPicker({ value, onChange }) {
     return (
         <div className="levels">
-            <div className="levels-row">
+            <div className="levels-row" role="group" aria-label="Qué entra en Hoy">
                 {LEVELS.map((l) => (
                     <button key={l.id} type="button" className="level" aria-pressed={value === l.id} onClick={() => onChange(l.id)}>
                         <LevelMeter level={l.id} big />
-                        <span>{l.label}</span>
+                        <span>{l.short}</span>
                     </button>
                 ))}
             </div>

@@ -3,7 +3,14 @@ package com.faro.lector;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.provider.Settings;
+import android.view.Window;
+
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import androidx.core.app.NotificationManagerCompat;
 import androidx.work.Constraints;
@@ -19,6 +26,11 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.google.mlkit.common.model.DownloadConditions;
+import com.google.mlkit.nl.translate.TranslateLanguage;
+import com.google.mlkit.nl.translate.Translation;
+import com.google.mlkit.nl.translate.Translator;
+import com.google.mlkit.nl.translate.TranslatorOptions;
 
 import org.json.JSONArray;
 
@@ -34,6 +46,8 @@ import java.util.concurrent.TimeUnit;
 public class FaroBackgroundPlugin extends Plugin {
 
     private static final int MIN_MINUTES = 15;
+    // La instancia viva, para que el servicio de reproducción le pase los toques.
+    private static FaroBackgroundPlugin instance;
 
     // Texto recibido con «Compartir → Faro», a la espera de que la app lo recoja.
     private String pendingShared;
@@ -48,6 +62,7 @@ public class FaroBackgroundPlugin extends Plugin {
         // Los canales se crean ya, para que aparezcan en los ajustes de Android
         // aunque todavía no haya llegado ningún aviso.
         FeedWorker.ensureChannels(getContext());
+        instance = this;
         capture(getActivity().getIntent());
     }
 
@@ -205,6 +220,111 @@ public class FaroBackgroundPlugin extends Plugin {
     public void test(PluginCall call) {
         FeedWorker.postTest(getContext());
         call.resolve();
+    }
+
+    /** Lo que el usuario tocó en la notificación del podcast: toggle, back, forward o stop. */
+    static void dispatchMedia(String action) {
+        if (instance == null) return;
+        JSObject data = new JSObject();
+        data.put("action", action);
+        instance.notifyListeners("media", data);
+    }
+
+    /** Muestra o actualiza la notificación de lo que suena y retiene la app mientras suene. */
+    @PluginMethod
+    public void playback(PluginCall call) {
+        Intent intent = new Intent(getContext(), PlaybackService.class).setAction(PlaybackService.ACTION_UPDATE);
+        intent.putExtra(PlaybackService.EXTRA_TITLE, call.getString("title", "Faro"));
+        intent.putExtra(PlaybackService.EXTRA_ARTIST, call.getString("artist", ""));
+        intent.putExtra(PlaybackService.EXTRA_PLAYING, Boolean.TRUE.equals(call.getBoolean("playing", false)));
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getContext().startForegroundService(intent);
+            else getContext().startService(intent);
+        } catch (Exception e) {
+            // Con la app en segundo plano Android puede negarse: el audio sigue sin notificación.
+        }
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void playbackStop(PluginCall call) {
+        getContext().stopService(new Intent(getContext(), PlaybackService.class));
+        call.resolve();
+    }
+
+    /** Pinta las barras del sistema del color de la pantalla que hay debajo. */
+    @PluginMethod
+    public void setBars(PluginCall call) {
+        final String color = call.getString("color", "#FFFFFF");
+        final boolean dark = Boolean.TRUE.equals(call.getBoolean("dark", false));
+        getActivity().runOnUiThread(() -> {
+            try {
+                Window window = getActivity().getWindow();
+                int value = Color.parseColor(color);
+                window.setBackgroundDrawable(new ColorDrawable(value));
+                window.setStatusBarColor(value);
+                window.setNavigationBarColor(value);
+                WindowInsetsControllerCompat bars = WindowCompat.getInsetsController(window, window.getDecorView());
+                bars.setAppearanceLightStatusBars(!dark);
+                bars.setAppearanceLightNavigationBars(!dark);
+            } catch (Exception e) {
+                // Color mal escrito: se quedan como estaban.
+            }
+        });
+        call.resolve();
+    }
+
+    /** Modelo y versión de Android, para acompañar un comentario del usuario. */
+    @PluginMethod
+    public void device(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("model", Build.MANUFACTURER + " " + Build.MODEL);
+        result.put("android", Build.VERSION.RELEASE);
+        call.resolve(result);
+    }
+
+    /**
+     * Traduce textos del inglés al español dentro del teléfono. La primera vez
+     * descarga el modelo de idioma (unos 30 MB); después funciona sin conexión.
+     */
+    @PluginMethod
+    public void translate(PluginCall call) {
+        JSArray texts = call.getArray("texts");
+        if (texts == null || texts.length() == 0) {
+            call.reject("Sin texto");
+            return;
+        }
+        TranslatorOptions options = new TranslatorOptions.Builder().setSourceLanguage(TranslateLanguage.ENGLISH).setTargetLanguage(TranslateLanguage.SPANISH).build();
+        Translator translator = Translation.getClient(options);
+        translator
+            .downloadModelIfNeeded(new DownloadConditions.Builder().build())
+            .addOnSuccessListener(done -> translateNext(translator, texts, 0, new JSArray(), call))
+            .addOnFailureListener(error -> {
+                translator.close();
+                call.reject("MODEL");
+            });
+    }
+
+    private void translateNext(Translator translator, JSArray texts, int index, JSArray out, PluginCall call) {
+        if (index >= texts.length()) {
+            translator.close();
+            JSObject result = new JSObject();
+            result.put("texts", out);
+            call.resolve(result);
+            return;
+        }
+        String text = texts.optString(index, "");
+        translator
+            .translate(text)
+            .addOnSuccessListener(translated -> {
+                out.put(translated);
+                translateNext(translator, texts, index + 1, out, call);
+            })
+            .addOnFailureListener(error -> {
+                // Un párrafo que falla se deja en su idioma y se sigue con el resto.
+                out.put(text);
+                translateNext(translator, texts, index + 1, out, call);
+            });
     }
 
     /** Lanza una revisión inmediata, sin esperar al siguiente turno. */

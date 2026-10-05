@@ -62,3 +62,40 @@ export function highlightsToMarkdown(items) {
         });
     return `# Resaltados de Faro\n\n${blocks.join('\n\n---\n\n')}\n`;
 }
+
+const csvCell = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+
+// El formato de importación de Readwise: una fila por resaltado.
+export function highlightsToReadwiseCsv(items) {
+    const rows = [['Highlight', 'Title', 'Author', 'URL', 'Note', 'Location', 'Date']];
+    for (const it of items) {
+        (it.highlights || []).forEach((h, i) => {
+            rows.push([h.text, it.title, it.source || '', it.url, h.note || '', i + 1, h.createdAt ? new Date(h.createdAt).toISOString().slice(0, 19).replace('T', ' ') : '']);
+        });
+    }
+    return `${rows.map((row) => row.map(csvCell).join(',')).join('\n')}\n`;
+}
+
+const noteName = (title) =>
+    String(title || 'Sin título')
+        .replace(/[\\/:*?"<>|#^[\]]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 80) || 'Sin título';
+
+// Para Obsidian: una nota por artículo, con sus datos arriba (propiedades) y
+// cada resaltado como cita. Devuelve [{ name, text }].
+export function highlightsToObsidian(items) {
+    const used = new Set();
+    return items
+        .filter((it) => it.highlights?.length)
+        .map((it) => {
+            let name = noteName(it.title);
+            for (let n = 2; used.has(name.toLowerCase()); n++) name = `${noteName(it.title)} ${n}`;
+            used.add(name.toLowerCase());
+            const tags = ['faro', ...(it.tags || [])].map((t) => t.replace(/\s+/g, '-'));
+            const head = ['---', `fuente: ${JSON.stringify(it.source || '')}`, `url: ${it.url}`, `etiquetas: [${tags.join(', ')}]`, '---'];
+            const quotes = it.highlights.map((h) => `> ${h.text.replace(/\n+/g, ' ')}${h.note ? `\n\n${h.note}` : ''}`);
+            return { name: `${name}.md`, text: `${head.join('\n')}\n\n# ${it.title}\n\n[Artículo original](${it.url})\n\n${quotes.join('\n\n')}\n` };
+        });
+}

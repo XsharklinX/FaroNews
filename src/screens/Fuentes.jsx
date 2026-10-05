@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import catalog from '../catalog/catalog.json';
 import { suggestSites } from '../core/insights.js';
 import { relTime } from '../core/text.js';
 import { matchTopic, topicWords } from '../core/today.js';
@@ -17,7 +16,7 @@ function pace(source) {
 }
 
 export default function Fuentes({ onCatalog, onEdit, onTopicEdit, onTopicOpen }) {
-    const { sources, articles, settings } = useStore();
+    const { sources, articles, settings, catalog } = useStore();
     const [pane, setPane] = useState('sitios');
 
     const { folders, failing } = useMemo(() => {
@@ -35,7 +34,7 @@ export default function Fuentes({ onCatalog, onEdit, onTopicEdit, onTopicOpen })
         };
     }, [sources, articles]);
 
-    const suggestions = useMemo(() => suggestSites(catalog, sources, 3), [sources]);
+    const suggestions = useMemo(() => suggestSites(catalog, sources, 3), [catalog, sources]);
     const topics = settings.topics || [];
     const topicCounts = useMemo(() => new Map(topics.map((t) => [t.id, articles.filter((a) => matchTopic(a, [t])).length])), [topics, articles]);
 

@@ -18,11 +18,14 @@ import { colorFor, htmlToText, readMinutes } from '../core/text.js';
 import { buildToday } from '../core/today.js';
 import { urlKey } from '../core/url.js';
 import { MIN_READABLE } from '../core/links.js';
+import { CATALOG_EVERY, newerCatalog } from '../core/catalog.js';
+import bundledCatalog from '../catalog/catalog.json';
+import { CATALOG_URL } from '../config.js';
 import { markSeen, notifyHistory, syncDaily, syncWatcher, takeSavedFromNotifications } from '../ports/background.js';
 import { db } from '../ports/db.js';
 import { tap } from '../ports/haptics.js';
 import { fetchText } from '../ports/http.js';
-import { cacheImages, initImages } from '../ports/images.js';
+import { cacheImages, initImages, unpinImages } from '../ports/images.js';
 import { loadSnapshot, saveExternalCopy, saveSnapshot } from '../ports/snapshot.js';
 
 const DEFAULT_READER = { font: 'serif', margin: 'normal', theme: 'auto' };
@@ -86,6 +89,10 @@ let state = {
     pendingOpen: null,
     // Historial de avisos enviados, para la bandeja.
     inbox: [],
+    // El catálogo de sitios: el de dentro de la app o uno más nuevo traído de la red.
+    catalog: bundledCatalog,
+    // Artículo al que se le están poniendo etiquetas.
+    tagging: null,
     // Cambia cuando se guardan imágenes nuevas, para que las listas se repinten.
     imgTick: 0,
 };
@@ -339,6 +346,37 @@ async function downloadToday() {
     if (await cacheImages(urls)) set({ imgTick: state.imgTick + 1 });
 }
 
+// Archivo: lo guardado se conserva entero en el teléfono (texto y fotos),
+// aunque el sitio lo borre después.
+async function archive(id) {
+    const article = state.articles.find((a) => a.id === id);
+    if (!article?.saved || article.kind) return;
+    await actions.ensureFullText(id);
+    const body = await db.get('bodies', id);
+    const kept = Boolean(body?.fullHtml || body?.contentHtml);
+    if (await cacheImages(imagesOf(article, body?.fullHtml || body?.contentHtml), { pin: true })) set({ imgTick: state.imgTick + 1 });
+    if (kept && state.articles.some((a) => a.id === id && a.saved)) patchArticle(id, { archived: true });
+}
+
+// Catálogo: el guardado de una consulta anterior y, cada semana, el publicado.
+async function loadCatalog() {
+    let catalog = newerCatalog(bundledCatalog, await db.getMeta('catalog'));
+    if (catalog !== bundledCatalog) set({ catalog });
+    if (!CATALOG_URL || Date.now() - ((await db.getMeta('catalogAt')) || 0) < CATALOG_EVERY) return;
+    try {
+        const remote = JSON.parse((await fetchText(CATALOG_URL)).text);
+        db.setMeta('catalogAt', Date.now());
+        const next = newerCatalog(catalog, remote);
+        if (next !== catalog) {
+            catalog = next;
+            set({ catalog });
+            db.setMeta('catalog', catalog);
+        }
+    } catch {
+        // Sin red o archivo ilegible: se sigue con el que hay.
+    }
+}
+
 // Cuántas historias traería una edición nueva ahora mismo.
 export function nextEditionCount() {
     return buildToday({ prev: { date: state.today.date, edition: 2, items: [] }, ...todayInput() }).items.length;
@@ -433,6 +471,9 @@ export const actions = {
         // Aunque no toque actualizar, lo de Hoy debe quedar listo para leer sin
         // conexión (por ejemplo, tras instalar una versión nueva).
         if (!state.refreshing) downloadToday();
+        loadCatalog();
+        // Lo guardado con versiones anteriores también pasa al archivo.
+        pool(state.articles.filter((x) => x.saved && !x.archived && !x.kind), 2, (x) => archive(x.id));
     },
 
     // Al abrir la app o volver a ella: solo actualiza si ya pasó un rato.
@@ -562,6 +603,11 @@ export const actions = {
         habit(article.sourceId, 's', saved ? 1 : -1);
         tap();
         if (!silent) showToast(saved ? 'Guardada para luego' : 'Quitada de Guardado', () => actions.toggleSaved(id, { silent: true }));
+        if (saved) archive(id);
+        else {
+            patchArticle(id, { archived: false });
+            db.get('bodies', id).then((body) => unpinImages(imagesOf(article, body?.fullHtml || body?.contentHtml)));
+        }
     },
 
     dismiss(id) {
@@ -783,6 +829,26 @@ export const actions = {
         };
         apply(true);
         showToast(pending.size === 1 ? 'Marcada como leída' : `${pending.size} marcadas como leídas`, () => apply(false));
+    },
+
+    // Etiquetas de un artículo guardado.
+    setTags(id, tags) {
+        const clean = [...new Set(tags.map((t) => t.trim()).filter(Boolean))];
+        patchArticle(id, { tags: clean });
+        queueSnapshot();
+    },
+    openTags(id) {
+        set({ tagging: id });
+    },
+    closeTags() {
+        set({ tagging: null });
+    },
+    // Guarda la traducción de un artículo para no repetirla.
+    async saveTranslation(id, esHtml, esTitle) {
+        const body = (await db.get('bodies', id)) || { id, contentHtml: '', fullHtml: '' };
+        const next = { ...body, esHtml, esTitle };
+        await db.put('bodies', next);
+        return next;
     },
 
     toast: showToast,

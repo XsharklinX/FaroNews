@@ -114,3 +114,39 @@ export async function takeSavedFromNotifications() {
 export function runWatcherNow() {
     if (canNotify) Native.runNow().catch(() => {});
 }
+
+// Lo que el usuario toca en la notificación del podcast: 'toggle', 'back',
+// 'forward' o 'stop'.
+export function onMedia(callback) {
+    if (!canNotify) return () => {};
+    const handle = Native.addListener('media', (data) => callback(data?.action));
+    return () => handle.then((h) => h.remove());
+}
+
+// Dice a Android qué está sonando, para que no cierre la app con la pantalla
+// apagada y ponga los controles en la notificación. Sin `info`, deja de sonar.
+export function syncPlayback(info) {
+    if (!canNotify) return;
+    (info ? Native.playback(info) : Native.playbackStop()).catch(() => {});
+}
+
+// Barras de estado y de navegación del color de la pantalla que hay debajo.
+export function setBars(color, dark) {
+    if (canNotify) Native.setBars({ color, dark }).catch(() => {});
+}
+
+export async function deviceInfo() {
+    if (!canNotify) return { model: 'navegador', android: '' };
+    try {
+        return await Native.device();
+    } catch {
+        return { model: '', android: '' };
+    }
+}
+
+// Traducción inglés → español hecha en el teléfono. La primera vez descarga
+// el idioma; si no puede, lanza un error con el mensaje 'MODEL'.
+export const canTranslate = canNotify;
+export async function translateTexts(texts) {
+    return (await Native.translate({ texts })).texts;
+}

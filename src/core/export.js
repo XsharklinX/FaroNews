@@ -2,15 +2,23 @@
 // luego se pintan en un PDF.
 
 const BLOCKS = 'p,h1,h2,h3,h4,h5,h6,li,blockquote,pre,figcaption';
+const MAX_IMAGES = 12;
 const clean = (text) => String(text || '').replace(/\s+/g, ' ').trim();
 
-// Párrafos, títulos, citas y listas del artículo, en orden: [{ type, text }].
+// Párrafos, títulos, citas, listas y fotos del artículo, en orden:
+// [{ type, text }] y, para las fotos, [{ type: 'img', src }].
 export function articleBlocks(html) {
     const doc = new DOMParser().parseFromString(`<div id="raiz">${html || ''}</div>`, 'text/html');
     const root = doc.getElementById('raiz');
-    for (const el of root.querySelectorAll('script,style,figure > img,noscript')) el.remove();
+    for (const el of root.querySelectorAll('script,style,noscript')) el.remove();
     const blocks = [];
-    for (const el of root.querySelectorAll(BLOCKS)) {
+    let images = 0;
+    for (const el of root.querySelectorAll(`${BLOCKS},img`)) {
+        if (el.tagName === 'IMG') {
+            const src = el.getAttribute('src') || '';
+            if (/^(https?:|data:image)/i.test(src) && images++ < MAX_IMAGES) blocks.push({ type: 'img', src });
+            continue;
+        }
         // Una cita o un punto de lista que contiene párrafos: valen los párrafos.
         if (el.querySelector(BLOCKS)) continue;
         const text = el.tagName === 'PRE' ? el.textContent.trim() : clean(el.textContent);
@@ -19,7 +27,7 @@ export function articleBlocks(html) {
         const type = /^h\d$/.test(tag) ? 'h' : tag === 'li' ? 'li' : tag === 'pre' ? 'pre' : tag === 'figcaption' ? 'nota' : el.closest('blockquote') ? 'cita' : 'p';
         blocks.push({ type, text });
     }
-    if (blocks.length) return blocks;
+    if (blocks.some((b) => b.type !== 'img')) return blocks;
     // Texto sin marcas: cada línea es un párrafo.
     return root.textContent
         .split(/\n+/)
@@ -35,7 +43,7 @@ export function articleCredit({ source, author, date }) {
 }
 
 export function articleToText({ title, source, author, date, url, blocks }) {
-    const body = blocks.map((b) => (b.type === 'li' ? `• ${b.text}` : b.type === 'cita' ? `«${b.text}»` : b.text));
+    const body = blocks.filter((b) => b.type !== 'img').map((b) => (b.type === 'li' ? `• ${b.text}` : b.type === 'cita' ? `«${b.text}»` : b.text));
     return [title, articleCredit({ source, author, date }), url, '', ...body.flatMap((line) => [line, '']), 'Enviado desde Faro'].filter((line, i, all) => line || all[i - 1]).join('\n');
 }
 

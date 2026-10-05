@@ -15,7 +15,7 @@ import { ReadingOptions } from './Lector.jsx';
 
 const BUDGET_MB = 80;
 
-export default function Ajustes({ onClose, onNotify, onStats }) {
+export default function Ajustes({ onClose, onNotify, onStats, onFeedback }) {
     const { sources, articles, settings, habits, refreshing, lastRefresh } = useStore();
     const fileRef = useRef(null);
     const backupRef = useRef(null);
@@ -181,6 +181,7 @@ export default function Ajustes({ onClose, onNotify, onStats }) {
 
                 <Group title="Ayuda">
                     <Row icon="grafico" title="Tu lectura" value="7 días" onClick={onStats} />
+                    <Row icon="editar" title="Enviar comentario" value="fallos e ideas" onClick={onFeedback} />
                     <Row
                         icon="gesto"
                         title="Ver los gestos"

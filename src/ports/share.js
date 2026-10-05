@@ -4,7 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 
-const TYPES = { json: 'application/json', md: 'text/markdown', txt: 'text/plain', pdf: 'application/pdf', opml: 'text/xml' };
+const TYPES = { zip: 'application/zip', csv: 'text/csv', json: 'application/json', md: 'text/markdown', txt: 'text/plain', pdf: 'application/pdf', opml: 'text/xml' };
 const typeOf = (name) => TYPES[name.split('.').pop()] || 'text/plain';
 
 export async function shareLink({ title, url }) {
@@ -44,6 +44,17 @@ export async function exportBinary(name, base64) {
     if (Capacitor.isNativePlatform()) return shareCached(name, { data: base64 });
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
     return download(name, new Blob([bytes], { type: typeOf(name) }));
+}
+
+// Manda un texto por donde el usuario elija: correo, mensajería, notas…
+export async function shareText(title, text) {
+    try {
+        if (Capacitor.isNativePlatform()) await Share.share({ title, text });
+        else if (navigator.share) await navigator.share({ title, text });
+        else await navigator.clipboard.writeText(text);
+    } catch {
+        // El usuario cerró el diálogo de compartir.
+    }
 }
 
 // Abre una dirección fuera de Faro: en el navegador o en la app que le toque.

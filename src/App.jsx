@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { actions, useStore } from './data/store.js';
-import { askPermission, canNotify, onNotificationOpen, onShared, onShortcut } from './ports/background.js';
+import { askPermission, canNotify, onNotificationOpen, onShared, onShortcut, setBars } from './ports/background.js';
 import Ajustes from './screens/Ajustes.jsx';
 import AnadirSheet from './screens/AnadirSheet.jsx';
 import Avisos from './screens/Avisos.jsx';
@@ -11,6 +11,7 @@ import Catalogo, { catalogBack } from './screens/Catalogo.jsx';
 import { Bandeja, Estadisticas, Gestos } from './screens/Extras.jsx';
 import Fuentes from './screens/Fuentes.jsx';
 import FuenteSheet from './screens/FuenteSheet.jsx';
+import { FeedbackSheet, TagsSheet } from './screens/Hojas.jsx';
 import Hoy from './screens/Hoy.jsx';
 import Lector from './screens/Lector.jsx';
 import Lista from './screens/Lista.jsx';
@@ -32,7 +33,7 @@ const TABS = [
 ];
 
 export default function App() {
-    const { ready, sources, settings, refreshing, toast, menu, compare, shared, pendingOpen, today } = useStore();
+    const { ready, sources, settings, refreshing, toast, menu, compare, shared, pendingOpen, today, tagging } = useStore();
     const playing = usePlayer();
     const [tab, setTab] = useState('hoy');
     const [reader, setReader] = useState(null);
@@ -49,6 +50,8 @@ export default function App() {
     const [statsOpen, setStatsOpen] = useState(false);
     // Hoja del botón «Añadir» de Fuentes: catálogo, dirección o tema.
     const [addMenu, setAddMenu] = useState(false);
+    // 'comentario' o 'sitio': lo que el usuario escribe a quien publica Faro.
+    const [feedback, setFeedback] = useState(null);
     // Sube cuando hay que poner el cursor en el buscador de Explorar.
     const [searchFocus, setSearchFocus] = useState(0);
     const chrome = useRef({ onInbox: () => setInboxOpen(true), onSettings: () => setSettingsOpen(true) }).current;
@@ -58,6 +61,29 @@ export default function App() {
         if (settings.theme === 'auto') delete document.documentElement.dataset.theme;
         else document.documentElement.dataset.theme = settings.theme;
     }, [settings.theme]);
+
+    // Las barras del sistema toman el color de lo que hay debajo: el arranque
+    // guiado, el lector con su fondo o la app con el tema elegido.
+    const bars = useRef('');
+    useEffect(() => {
+        if (!ready) return undefined;
+        const paint = () => {
+            const top = document.querySelector('.onb') || document.querySelector('.reader:not(.read-sample)') || document.documentElement;
+            const raw = top.classList.contains('onb') ? '#0A1326' : getComputedStyle(top).getPropertyValue('--bg').trim() || '#FFFFFF';
+            // El CSS compilado abrevia los colores (#fff): Android los quiere enteros.
+            const color = /^#[0-9a-f]{3}$/i.test(raw) ? `#${[...raw.slice(1)].map((c) => c + c).join('')}` : raw;
+            const [r, g, b] = [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16));
+            const dark = r * 0.299 + g * 0.587 + b * 0.114 < 140;
+            if (bars.current === color) return;
+            bars.current = color;
+            setBars(color, dark);
+        };
+        paint();
+        // El teléfono puede pasar de claro a oscuro con la app abierta.
+        const scheme = window.matchMedia('(prefers-color-scheme: dark)');
+        scheme.addEventListener('change', paint);
+        return () => scheme.removeEventListener('change', paint);
+    }, [ready, settings.theme, settings.reader.theme, settings.onboarded, sources.length > 0, Boolean(reader)]);
 
     // Cada pestaña empieza arriba, no donde se dejó la anterior.
     useEffect(() => {
@@ -69,6 +95,8 @@ export default function App() {
     back.current = () => {
         if (shared) actions.setShared(null);
         else if (playing.open) player.setOpen(false);
+        else if (tagging) actions.closeTags();
+        else if (feedback) setFeedback(null);
         else if (menu) actions.closeMenu();
         else if (compare) actions.closeCompare();
         else if (addMenu) setAddMenu(false);
@@ -221,7 +249,7 @@ export default function App() {
                 ))}
             </nav>
 
-            {settingsOpen && <Ajustes onClose={() => setSettingsOpen(false)} onNotify={() => setNotifyOpen(true)} onStats={() => setStatsOpen(true)} />}
+            {settingsOpen && <Ajustes onClose={() => setSettingsOpen(false)} onNotify={() => setNotifyOpen(true)} onStats={() => setStatsOpen(true)} onFeedback={() => setFeedback('comentario')} />}
             {statsOpen && <Estadisticas onClose={() => setStatsOpen(false)} />}
             {inboxOpen && <Bandeja onClose={() => setInboxOpen(false)} onNotify={() => setNotifyOpen(true)} />}
             {siteView && (
@@ -235,7 +263,7 @@ export default function App() {
                     <Lista mode="tema" topic={topicView} onOpen={open} onClose={() => setTopicView(null)} />
                 </div>
             )}
-            {catalog && <Catalogo onClose={() => setCatalog(false)} onAddByUrl={() => setAdding(true)} onRead={(id, site) => setReader({ id, list: [id], origin: '', linked: `Vista previa de ${site}`, back: reader })} />}
+            {catalog && <Catalogo onClose={() => setCatalog(false)} onAddByUrl={() => setAdding(true)} onSuggest={() => setFeedback('sitio')} onRead={(id, site) => setReader({ id, list: [id], origin: '', linked: `Vista previa de ${site}`, back: reader })} />}
             {reader && (
                 <Lector
                     {...reader}
@@ -289,6 +317,8 @@ export default function App() {
             {editing && <FuenteSheet id={editing} onClose={() => setEditing(null)} onNotify={() => setNotifyOpen(true)} />}
             {compare && <CoverageSheet ids={compare} onOpen={open} />}
             {menu && <StoryMenu id={menu} onOpen={openOne} />}
+            {tagging && <TagsSheet id={tagging} />}
+            {feedback && <FeedbackSheet kind={feedback} onClose={() => setFeedback(null)} />}
             {shared && (
                 <ShareSheet
                     url={shared}

@@ -2,21 +2,20 @@
 // primer Hoy ya armado con los sitios recomendados de cada tema.
 
 import { useState } from 'react';
-import catalog from '../catalog/catalog.json';
 import { actions, useStore } from '../data/store.js';
 import { Logo } from '../ui/bits.jsx';
 
 const NATIONAL = 'nacionales';
 
-function guessCountry() {
+function guessCountry(catalog) {
     const region = (navigator.language || '').split('-')[1]?.toLowerCase();
     return catalog.countries.some((c) => c.id === region) ? region : catalog.countries[0].id;
 }
 
 export default function Onboarding() {
-    const { settings } = useStore();
+    const { settings, catalog } = useStore();
     const [picked, setPicked] = useState([]);
-    const [country, setCountry] = useState(settings.country || guessCountry());
+    const [country, setCountry] = useState(settings.country || guessCountry(catalog));
     const [working, setWorking] = useState(null);
 
     const toggle = (id) => setPicked(picked.includes(id) ? picked.filter((p) => p !== id) : [...picked, id]);

@@ -17,6 +17,26 @@ const header = (headers, name) => {
     return key ? String(headers[key]) : '';
 };
 
+// Una imagen como «data:» para poder pintarla en un PDF sin que el navegador
+// la bloquee por venir de otro sitio.
+export async function fetchDataUrl(url) {
+    if (Capacitor.isNativePlatform()) {
+        const res = await CapacitorHttp.get({ url, responseType: 'blob', connectTimeout: TIMEOUT, readTimeout: TIMEOUT });
+        if (res.status >= 400 || typeof res.data !== 'string') throw new Error(`HTTP ${res.status}`);
+        return `data:${header(res.headers, 'content-type').split(';')[0] || 'image/jpeg'};base64,${res.data}`;
+    }
+    const res = await fetch(`/__proxy?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(TIMEOUT + 2000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const type = (res.headers.get('x-content-type') || 'image/jpeg').split(';')[0];
+    const blob = new Blob([await res.arrayBuffer()], { type });
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+
 export async function fetchText(url) {
     if (Capacitor.isNativePlatform()) {
         const res = await CapacitorHttp.get({

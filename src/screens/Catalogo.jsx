@@ -5,7 +5,6 @@
 // y los resultados de buscar. Tocar un sitio abre su vista previa.
 
 import { useEffect, useMemo, useState } from 'react';
-import catalog from '../catalog/catalog.json';
 import { suggestSites } from '../core/insights.js';
 import { agoLabel, matchesQuery } from '../core/text.js';
 import { urlKey } from '../core/url.js';
@@ -26,7 +25,7 @@ const LANGS = [
 export const catalogBack = { current: null };
 
 // País por defecto: el de la región del teléfono si está en el catálogo.
-function guessCountry() {
+function guessCountry(catalog) {
     const region = (navigator.language || '').split('-')[1]?.toLowerCase();
     return catalog.countries.some((c) => c.id === region) ? region : catalog.countries[0].id;
 }
@@ -46,11 +45,10 @@ const host = (entry) => {
         return '';
     }
 };
-const nameOf = (id) => catalog.categories.find((c) => c.id === id)?.name || '';
 const asSource = (entry) => ({ title: entry.name, icon: entry.icon });
 
 // Lo último que ha publicado un sitio, para decidir antes de seguirlo.
-function Preview({ entry, on, onToggle, onRead, onClose }) {
+function Preview({ entry, topic, on, onToggle, onRead, onClose }) {
     const [items, setItems] = useState(null);
     const [failed, setFailed] = useState(false);
     const [opening, setOpening] = useState('');
@@ -83,7 +81,7 @@ function Preview({ entry, on, onToggle, onRead, onClose }) {
         else openExternal(item.url);
     };
 
-    const facts = [nameOf(entry.cat), entry.kind === 'page' ? 'Sin feed: se leen sus titulares' : pace(entry.perWeek), entry.lang === 'en' ? 'En inglés' : ''].filter(Boolean);
+    const facts = [topic, entry.kind === 'page' ? 'Sin feed: se leen sus titulares' : pace(entry.perWeek), entry.lang === 'en' ? 'En inglés' : ''].filter(Boolean);
 
     return (
         <Sheet title={entry.name} subtitle={entry.desc} onClose={onClose}>
@@ -157,14 +155,15 @@ function Row({ entry, on, tag, onOpen, onToggle }) {
     );
 }
 
-export default function Catalogo({ onClose, onAddByUrl, onRead }) {
-    const { sources, settings } = useStore();
+export default function Catalogo({ onClose, onAddByUrl, onRead, onSuggest }) {
+    const { sources, settings, catalog } = useStore();
+    const nameOf = (id) => catalog.categories.find((c) => c.id === id)?.name || '';
     const [cat, setCat] = useState('');
     const [query, setQuery] = useState('');
     const [lang, setLang] = useState('');
     const [peek, setPeek] = useState(null);
     const searching = query.trim().length > 0;
-    const country = settings.country || guessCountry();
+    const country = settings.country || guessCountry(catalog);
 
     const followed = useMemo(() => new Map(sources.map((s) => [urlKey(s.feedUrl), s.id])), [sources]);
     const isFollowed = (entry) => followed.has(urlKey(entry.feed));
@@ -192,17 +191,17 @@ export default function Catalogo({ onClose, onAddByUrl, onRead }) {
                 const faces = [...all].sort((a, b) => Number(Boolean(b.top)) - Number(Boolean(a.top))).filter((s) => String(s.icon || '').startsWith('catalog-icons/'));
                 return { ...c, count: all.length, mine: all.filter((s) => followed.has(urlKey(s.feed))).length, faces: faces.slice(0, 4) };
             }),
-        [country, followed]
+        [catalog, country, followed]
     );
-    const suggestions = useMemo(() => suggestSites(catalog, sources, 8), [sources]);
+    const suggestions = useMemo(() => suggestSites(catalog, sources, 8), [catalog, sources]);
 
-    const inTopic = useMemo(() => catalog.sources.filter((s) => s.cat === cat && (cat !== NATIONAL || s.country === country)), [cat, country]);
+    const inTopic = useMemo(() => catalog.sources.filter((s) => s.cat === cat && (cat !== NATIONAL || s.country === country)), [catalog, cat, country]);
     const hasEnglish = inTopic.some((s) => s.lang === 'en') && inTopic.some((s) => s.lang !== 'en');
     const list = useMemo(() => {
         const base = searching ? catalog.sources.filter((s) => matchesQuery(query, s.name, s.desc, host(s), nameOf(s.cat))) : inTopic.filter((s) => !lang || (s.lang || 'es') === lang);
         // Recomendadas primero; después, en español antes que en inglés.
         return [...base].sort((a, b) => Number(Boolean(b.top)) - Number(Boolean(a.top)) || Number(a.lang === 'en') - Number(b.lang === 'en') || a.name.localeCompare(b.name, 'es'));
-    }, [inTopic, lang, query, searching]);
+    }, [catalog, inTopic, lang, query, searching]);
     const pending = list.filter((s) => s.top && !isFollowed(s));
 
     const openTopic = (id) => {
@@ -336,10 +335,13 @@ export default function Catalogo({ onClose, onAddByUrl, onRead }) {
                     <button type="button" className="btn-ghost" onClick={onAddByUrl}>
                         Añadir un sitio por su dirección
                     </button>
+                    <button type="button" className="link-btn" onClick={onSuggest}>
+                        Sugerir un sitio para el catálogo
+                    </button>
                 </div>
             </div>
 
-            {peek && <Preview entry={peek} on={isFollowed(peek)} onToggle={() => toggle(peek)} onRead={onRead} onClose={() => setPeek(null)} />}
+            {peek && <Preview entry={peek} topic={nameOf(peek.cat)} on={isFollowed(peek)} onToggle={() => toggle(peek)} onRead={onRead} onClose={() => setPeek(null)} />}
         </div>
     );
 }

@@ -3,16 +3,17 @@
 
 import { useState } from 'react';
 import Icon from './Icon.jsx';
+import { Switch } from './bits.jsx';
 
 // Fila con icono, título y valor. Si lleva hijos se despliega al tocarla; si
 // lleva `onClick`, navega.
-export function Row({ icon, title, value, onClick, children, danger = false, disabled = false }) {
+export function Row({ icon, title, value, onClick, children, danger = false, disabled = false, flip = false }) {
     const [open, setOpen] = useState(false);
     const folds = Boolean(children);
     return (
         <div className={`set-row${open ? ' open' : ''}`}>
             <button type="button" className="set-main" aria-expanded={folds ? open : undefined} disabled={disabled} onClick={folds ? () => setOpen(!open) : onClick}>
-                <span className={`set-icon${danger ? ' warn' : ''}`}>
+                <span className={`set-icon${danger ? ' warn' : ''}${flip ? ' flip' : ''}`}>
                     <Icon name={icon} size={19} strokeWidth={1.8} />
                 </span>
                 <span className="set-title">{title}</span>
@@ -22,6 +23,24 @@ export function Row({ icon, title, value, onClick, children, danger = false, dis
                 </span>
             </button>
             {folds && open && <div className="set-body">{children}</div>}
+        </div>
+    );
+}
+
+// Fila con un interruptor a la derecha y una línea de explicación.
+export function SwitchRow({ icon, title, hint, checked, onChange }) {
+    return (
+        <div className="set-row">
+            <div className="set-main as-switch">
+                <span className="set-icon">
+                    <Icon name={icon} size={19} strokeWidth={1.8} />
+                </span>
+                <span className="set-title">
+                    {title}
+                    {hint && <small>{hint}</small>}
+                </span>
+                <Switch checked={checked} onChange={onChange} label={title} />
+            </div>
         </div>
     );
 }

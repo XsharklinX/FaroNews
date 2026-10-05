@@ -1,0 +1,83 @@
+# Publica en GitHub Pages lo que Faro necesita tener en una dirección pública:
+#
+#   https://xsharklinx.github.io/FaroNews/                  página de presentación
+#   https://xsharklinx.github.io/FaroNews/privacidad.html   política de privacidad (la que pide Play Console)
+#   https://xsharklinx.github.io/FaroNews/catalog.json      catálogo que la app consulta cada semana
+#
+# Requisito, una sola vez: en el repositorio, Settings → Pages → Source:
+# «GitHub Actions».
+#
+# Se ejecuta al subir cambios a main y, además, cada lunes: ese día comprueba
+# los feeds del catálogo contra la red y, si alguno falla, abre una incidencia
+# con la lista. El catálogo se publica igualmente.
+name: Publicar
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/catalog/**'
+      - 'public/catalog-icons/**'
+      - 'playstore/privacidad.html'
+      - 'playstore/web/**'
+      - '.github/workflows/catalogo.yml'
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Solo en la revisión semanal (o al lanzarlo a mano): comprobar los feeds.
+      - uses: pnpm/action-setup@v4
+        if: github.event_name != 'push'
+      - uses: actions/setup-node@v4
+        if: github.event_name != 'push'
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Comprobar los feeds
+        id: check
+        if: github.event_name != 'push'
+        continue-on-error: true
+        run: |
+          pnpm install --frozen-lockfile
+          node scripts/check-catalog.mjs --write --report informe.md
+      - name: Avisar de los que fallan
+        if: steps.check.outcome == 'failure' && hashFiles('informe.md') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --title "Catálogo, sitios que no responden ($(date +%F))" --body-file informe.md
+
+      - name: Preparar lo que se publica
+        run: |
+          mkdir -p publicar
+          cp playstore/web/index.html publicar/index.html
+          cp playstore/privacidad.html publicar/privacidad.html
+          cp playstore/icono-512.png publicar/icono.png
+          cp src/catalog/catalog.json publicar/catalog.json
+          cp -r public/catalog-icons publicar/catalog-icons
+          touch publicar/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: publicar
+      - id: deploy
+        uses: actions/deploy-pages@v4

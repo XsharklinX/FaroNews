@@ -4,6 +4,10 @@
 //   node scripts/check-catalog.mjs            solo informa
 //   node scripts/check-catalog.mjs --write    guarda el feed de los que funcionan
 //   node scripts/check-catalog.mjs --prune    además quita los que fallan
+//   node scripts/check-catalog.mjs --report informe.md   deja la lista de fallos en un archivo
+//
+// Si algún sitio falla, termina con código 1: así la revisión semanal
+// automática (.github/workflows/catalogo.yml) puede avisar.
 //
 // Usa el mismo User-Agent y el mismo código de descubrimiento que la app, así
 // que lo que pasa aquí es lo que verá el usuario.
@@ -20,6 +24,8 @@ const FILE = new URL('../src/catalog/catalog.json', import.meta.url);
 const STALE_DAYS = 45;
 const write = process.argv.includes('--write') || process.argv.includes('--prune');
 const prune = process.argv.includes('--prune');
+const reportAt = process.argv.indexOf('--report');
+const reportFile = reportAt > -1 ? process.argv[reportAt + 1] : '';
 
 async function fetchText(url) {
     const res = await fetch(url, {
@@ -125,6 +131,8 @@ if (write) {
             if (r.perWeek) r.source.perWeek = r.perWeek;
         }
     }
+    // La fecha es lo que la app compara para saber si este catálogo es más nuevo que el suyo.
+    catalog.updated = new Date().toISOString().slice(0, 10);
     if (prune) {
         const bad = new Set(failed.map((r) => r.source));
         catalog.sources = catalog.sources.filter((s) => !bad.has(s));
@@ -132,3 +140,15 @@ if (write) {
     await writeFile(FILE, `${JSON.stringify(catalog, null, 2)}\n`);
     console.log(prune ? `Guardado. Se quitaron ${failed.length}.` : 'Guardado.');
 }
+
+if (reportFile) {
+    const lines = failed.map((r) => `- **${r.source.name}** (${r.source.cat}): ${r.why} — ${r.source.feed || r.source.url}`);
+    await writeFile(reportFile, `${results.length - failed.length} de ${results.length} sitios del catálogo responden.
+
+${lines.length ? `Fallan ${lines.length}:
+
+${lines.join('
+')}` : 'Ninguno falla.'}
+`);
+}
+process.exit(failed.length ? 1 : 0);

@@ -26,6 +26,7 @@ export default function Lista({ mode, topic, sourceId, onOpen, onClose, onEditSo
     const [shown, setShown] = useState(PAGE);
     const [query, setQuery] = useState('');
     const [folder, setFolder] = useState('');
+    const [tag, setTag] = useState('');
     // Artículos cuyo texto (no solo el titular) contiene lo buscado.
     const [inText, setInText] = useState(null);
     const input = useRef(null);
@@ -72,17 +73,20 @@ export default function Lista({ mode, topic, sourceId, onOpen, onClose, onEditSo
                 .filter(({ article: a, source }) => {
                     if (kind && !kind.test(a)) return false;
                     if (folder && (source.folder || '') !== folder) return false;
-                    if (searching) return matchesQuery(query, a.title, a.summary, source.title) || Boolean(inText?.has(a.id));
+                    if (tag && !(a.tags || []).includes(tag)) return false;
+                    if (searching) return matchesQuery(query, a.title, a.summary, source.title, ...(a.tags || [])) || Boolean(inText?.has(a.id));
                     // Al buscar se mira en todo, también lo leído y lo descartado.
                     if (saved || isTopic) return true;
                     return !a.dismissed && (!unreadOnly || !a.read);
                 })
                 .sort((a, b) => when(b.article) - when(a.article)),
-        [base, kind, folder, searching, query, inText, saved, isTopic, unreadOnly]
+        [base, kind, folder, tag, searching, query, inText, saved, isTopic, unreadOnly]
     );
 
     const hasMedia = useMemo(() => base.some((it) => it.article.kind), [base]);
     const folders = useMemo(() => (mode === 'todo' ? [...new Set(sources.map((s) => s.folder).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')) : []), [sources, mode]);
+
+    const tags = useMemo(() => (saved ? [...new Set(base.flatMap((it) => it.article.tags || []))].sort((a, b) => a.localeCompare(b, 'es')) : []), [base, saved]);
 
     if (isSite && !site) return null;
 
@@ -95,7 +99,7 @@ export default function Lista({ mode, topic, sourceId, onOpen, onClose, onEditSo
     const liking = isSite ? affinity(habits[site.id]) : 0;
     const textOnly = searching && inText ? list.filter((it) => !matchesQuery(query, it.article.title, it.article.summary, it.source.title)).length : 0;
     const count = `${list.length} ${list.length === 1 ? 'artículo' : 'artículos'}${searching ? (list.length === 1 ? ' encontrado' : ' encontrados') : canFilterRead && unreadOnly ? ' sin leer' : ''}`;
-    const showChips = canFilterRead || hasMedia || folders.length > 1;
+    const showChips = canFilterRead || hasMedia || folders.length > 1 || tags.length > 0;
 
     return (
         <div className="screen">
@@ -195,6 +199,11 @@ export default function Lista({ mode, topic, sourceId, onOpen, onClose, onEditSo
                                 {f}
                             </button>
                         ))}
+                    {tags.map((t) => (
+                        <button key={t} type="button" className="tab-chip" aria-pressed={tag === t} onClick={() => setTag(tag === t ? '' : t)}>
+                            #{t}
+                        </button>
+                    ))}
                     {isSite && unread > 0 && !searching && (
                         <button type="button" className="tab-chip act" onClick={() => actions.markAllRead(site.id)}>
                             Marcar todo leído

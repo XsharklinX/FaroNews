@@ -2,12 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { articleBlocks, articleToText, fileSlug } from '../core/export.js';
 import { applyHighlights } from '../core/highlight.js';
 import { localizeImages } from '../core/images.js';
+import { looksEnglish, translateHtml } from '../core/lang.js';
 import { linkPlan } from '../core/links.js';
 import { cleanHtml } from '../core/readable.js';
 import { agoLabel, looksLikeHtml, plainToHtml } from '../core/text.js';
 import { resolveUrl } from '../core/url.js';
 import { player, usePlayer } from '../data/player.js';
 import { actions, sourceOf, useStore } from '../data/store.js';
+import { canTranslate, translateTexts } from '../ports/background.js';
 import { tap } from '../ports/haptics.js';
 import { localSrc } from '../ports/images.js';
 import { exportBinary, exportFile, openExternal, shareLink } from '../ports/share.js';
@@ -138,7 +140,14 @@ function SendSheet({ onPick, onClose }) {
                         <Icon name="documento" size={20} strokeWidth={1.8} />
                         PDF
                     </span>
-                    <span className="sub-s">para leer o imprimir</span>
+                    <span className="sub-s">con sus fotos</span>
+                </button>
+                <button type="button" className="line-btn" onClick={() => onPick('pdf-texto')}>
+                    <span>
+                        <Icon name="documento" size={20} strokeWidth={1.8} />
+                        PDF sin fotos
+                    </span>
+                    <span className="sub-s">más ligero, para imprimir</span>
                 </button>
             </div>
         </Sheet>
@@ -163,6 +172,9 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
     const [editing, setEditing] = useState(null);
     const [options, setOptions] = useState(false);
     const [sending, setSending] = useState(false);
+    // Traducción: si se está viendo y si se está haciendo ahora.
+    const [translated, setTranslated] = useState(false);
+    const [translating, setTranslating] = useState(false);
     const opening = useRef(false);
     const playing = usePlayer();
 
@@ -193,6 +205,7 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
 
     useEffect(() => {
         setBody(null);
+        setTranslated(false);
     }, [id]);
     // Se vuelve a leer cuando llega el texto completo.
     useEffect(() => {
@@ -210,8 +223,10 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
         const feedText = looksLikeHtml(body.contentHtml) ? cleanHtml(body.contentHtml, article.url) : cleanHtml(plainToHtml(body.contentHtml), article.url);
         // Algunas páginas dejan suelta la fecha en formato de máquina: no se muestra.
         const base = (article.kind ? feedText : body.fullHtml || feedText).replace(/>\s*\d{4}-\d{2}-\d{2}T[\d:.+-]+Z?\s*</g, '><');
+        // La traducción no lleva resaltados: están hechos sobre el texto original.
+        if (translated && body.esHtml) return localizeImages(body.esHtml, localSrc);
         return localizeImages(applyHighlights(base, article.highlights), localSrc);
-    }, [article?.id, article?.kind, body, article?.highlights, imgTick]);
+    }, [article?.id, article?.kind, body, article?.highlights, imgTick, translated]);
     const [expanded, setExpanded] = useState(false);
     useEffect(() => setExpanded(false), [id]);
     const isMedia = Boolean(article?.kind);
@@ -296,12 +311,35 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
             } else {
                 actions.toast('Preparando el PDF…');
                 const { articlePdf } = await import('../ports/pdf.js');
-                const pdf = await articlePdf(data);
+                const pdf = await articlePdf({ ...data, images: format === 'pdf' });
                 actions.clearToast();
                 await exportBinary(`${fileSlug(article.title)}.pdf`, pdf);
             }
         } catch {
             actions.toast('No se pudo preparar el archivo');
+        }
+    };
+    // Traduce al español dentro del teléfono y guarda el resultado.
+    const translate = async () => {
+        if (translated) {
+            setTranslated(false);
+            return;
+        }
+        if (body.esHtml) {
+            setTranslated(true);
+            return;
+        }
+        setTranslating(true);
+        try {
+            const feedText = looksLikeHtml(body.contentHtml) ? cleanHtml(body.contentHtml, article.url) : cleanHtml(plainToHtml(body.contentHtml), article.url);
+            const esHtml = await translateHtml(body.fullHtml || feedText, translateTexts);
+            const [esTitle] = await translateTexts([article.title]);
+            setBody(await actions.saveTranslation(id, esHtml, esTitle));
+            setTranslated(true);
+        } catch (err) {
+            actions.toast(String(err?.message || err).includes('MODEL') ? 'No se pudo descargar el idioma. La primera vez hace falta conexión.' : 'No se pudo traducir este artículo');
+        } finally {
+            setTranslating(false);
         }
     };
     const onProseClick = (e) => {
@@ -339,6 +377,8 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
     const meta = [agoLabel(article.publishedAt || article.fetchedAt), article.kind ? lengthLabel(article) : `${article.minutes} min de lectura`].filter(Boolean).join(' · ');
     // La foto del artículo abre el texto, salvo que el texto ya empiece con una.
     const hero = !isMedia && article.image && html && !/<img/i.test(html.slice(0, 1500));
+    const english = canTranslate && !isMedia && Boolean(body) && looksEnglish(`${article.title}. ${article.summary || ''}`);
+    const tags = article.tags || [];
 
     return (
         <div className="reader" data-theme={reader.theme} data-font={reader.font} data-margin={reader.margin}>
@@ -367,8 +407,26 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
                     </span>
                 </div>
 
-                <h1 className="reader-title">{article.title}</h1>
-                {article.author && <p className="reader-by">Por {article.author}</p>}
+                <h1 className="reader-title">{translated && body?.esTitle ? body.esTitle : article.title}</h1>
+                {(article.author || (article.saved && article.archived)) && (
+                    <p className="reader-by">{[article.author ? `Por ${article.author}` : '', article.saved && article.archived ? 'Copia guardada en tu teléfono' : ''].filter(Boolean).join(' · ')}</p>
+                )}
+
+                {(english || article.saved) && (
+                    <div className="reader-chips">
+                        {english && (
+                            <button type="button" className="tab-chip" aria-pressed={translated} disabled={translating} onClick={translate}>
+                                {translating ? 'Traduciendo…' : translated ? 'Ver el original' : 'Traducir al español'}
+                            </button>
+                        )}
+                        {article.saved && (
+                            <button type="button" className="tab-chip" onClick={() => actions.openTags(id)}>
+                                {tags.length ? tags.map((t) => `#${t}`).join(' ') : '+ Etiqueta'}
+                            </button>
+                        )}
+                    </div>
+                )}
+                {translated && <p className="hint reader-note">Traducción automática hecha en tu teléfono. Puede tener errores.</p>}
 
                 {hero && <Thumb src={article.image} className="reader-hero" />}
 

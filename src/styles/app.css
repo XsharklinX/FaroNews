@@ -309,11 +309,17 @@ button:disabled { opacity: 0.45; cursor: default; }
 
 /* Niveles de una fuente */
 .levels { display: flex; flex-direction: column; gap: 8px; }
-.levels-row { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-.level { min-height: 46px; padding: 0 14px; display: flex; align-items: center; font-size: 14.5px; font-weight: 500; color: var(--ink2); }
-.level + .level { border-top: 1px solid var(--line); }
-.level[aria-pressed='true'] { background: var(--ink); color: var(--bg); font-weight: 600; }
-.meter { display: none; }
+.levels-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.level { min-height: 86px; padding: 12px 6px 10px; border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 8px; text-align: center; font-size: 13px; line-height: 1.2; font-weight: 500; color: var(--ink2); }
+.level[aria-pressed='true'] { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); color: var(--ink); font-weight: 600; }
+/* Tres haces: cuantos más encendidos, más deja pasar el sitio. */
+.meter { display: flex; align-items: flex-end; gap: 4px; height: 26px; }
+.meter i { width: 8px; border-radius: 3px; background: var(--line); }
+.meter i:nth-child(1) { height: 26px; }
+.meter i:nth-child(2) { height: 18px; }
+.meter i:nth-child(3) { height: 10px; }
+.meter i.on { background: var(--ink3); }
+.level[aria-pressed='true'] .meter i.on { background: var(--lamp); }
 
 /* Hojas inferiores */
 .sheet-wrap { position: absolute; inset: 0; background: rgba(8, 10, 14, 0.55); display: flex; flex-direction: column; justify-content: flex-end; z-index: 20; }
@@ -623,3 +629,21 @@ button:disabled { opacity: 0.45; cursor: default; }
 .card.pad > .rank + .rank { margin-top: -4px; }
 
 .bar-fill.zero { background: var(--line); }
+
+/* Lote de mejoras: menú de una historia, ficha de un sitio, lector y resaltados. */
+.set-main.as-switch { min-height: 62px; padding-block: 8px; cursor: default; }
+.set-title small { display: block; font-size: 12.5px; font-weight: 400; line-height: 1.3; color: var(--ink2); margin-top: 1px; }
+.set-icon.warn { color: var(--warn); }
+.set-icon.flip svg { transform: rotate(180deg); }
+.menu-story { display: flex; align-items: flex-start; gap: 14px; }
+.menu-story .story-title { font-size: 18px; }
+.quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.quick button { min-height: 72px; border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12.5px; font-weight: 500; text-align: center; }
+.quick button:active { background: var(--press); }
+.quick button[aria-pressed='true'] { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); font-weight: 600; }
+.chip-input { min-height: 34px; width: 108px; padding: 0 13px; border-radius: 17px; border: 1px dashed var(--ink3); background: none; font-size: 13px; color: var(--ink); }
+.chip-input:focus-visible { outline: 0; border-style: solid; border-color: var(--ink); }
+.reader-chips { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 16px; }
+.reader-chips .tab-chip { white-space: normal; text-align: center; }
+.reader-note { padding-bottom: 14px; }
+.search.lone { margin-top: 14px; }

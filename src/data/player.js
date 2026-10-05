@@ -2,6 +2,7 @@
 // velocidad, que sigue sonando al cambiar de pantalla.
 
 import { useSyncExternalStore } from 'react';
+import { onMedia, syncPlayback } from '../ports/background.js';
 import { actions, getState } from './store.js';
 
 const KEY = 'faro-reproductor';
@@ -27,6 +28,17 @@ function set(patch) {
         // No es grave: la cola no sobrevivirá al cierre.
     }
     for (const fn of listeners) fn();
+    announce();
+}
+
+// Android recibe qué suena solo cuando cambia: el episodio o si está en pausa.
+let announced = '';
+function announce() {
+    const article = state.current ? getState().articles.find((a) => a.id === state.current) : null;
+    const key = article ? `${article.id}|${state.playing}` : '';
+    if (key === announced) return;
+    announced = key;
+    syncPlayback(article ? { title: article.title, artist: getState().sources.find((s) => s.id === article.sourceId)?.title || '', playing: state.playing } : null);
 }
 const subscribe = (fn) => {
     listeners.add(fn);
@@ -182,6 +194,16 @@ if (audio) {
         handle('nexttrack', () => player.next());
     }
 }
+
+// Botones de la notificación.
+onMedia((action) => {
+    if (action === 'toggle') player.toggle();
+    else if (action === 'back') player.skip(-15);
+    else if (action === 'forward') player.skip(30);
+    else if (action === 'stop') {
+        if (audio && !audio.paused) audio.pause();
+    }
+});
 
 export function clock(seconds) {
     if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
