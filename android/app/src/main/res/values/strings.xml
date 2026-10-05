@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Faro</string>
+    <string name="title_activity_main">Faro</string>
+    <string name="package_name">com.faronews.app</string>
+    <string name="custom_url_scheme">com.faronews.app</string>
+    <string name="shortcut_hoy">Hoy</string>
+    <string name="shortcut_hoy_long">Abrir la edición de hoy</string>
+    <string name="shortcut_buscar">Buscar</string>
+    <string name="shortcut_buscar_long">Buscar en lo recibido</string>
+    <string name="shortcut_guardado">Guardado</string>
+    <string name="shortcut_guardado_long">Abrir lo guardado</string>
+    <string name="shortcut_anadir">Añadir sitio</string>
+    <string name="shortcut_anadir_long">Añadir un sitio</string>
+</resources>

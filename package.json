@@ -1,0 +1,53 @@
+{
+  "name": "faro",
+  "version": "0.7.1",
+  "description": "Faro para Android: noticias de los sitios que te importan, local-first, sin cuenta y sin servidor",
+  "author": "David Bonilla",
+  "license": "ISC",
+  "type": "module",
+  "private": true,
+  "packageManager": "pnpm@11.1.1",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "sync": "pnpm build && cap sync android",
+    "android": "pnpm sync && cap open android",
+    "android:run": "pnpm sync && cap run android",
+    "apk:debug": "pnpm sync && cd android && .\\gradlew.bat assembleDebug",
+    "keystore": "node scripts/create-keystore.mjs",
+    "release": "node scripts/release.mjs",
+    "playstore": "node scripts/playstore.mjs",
+    "apk:release": "pnpm sync && cd android && .\\gradlew.bat assembleRelease",
+    "catalog:check": "node scripts/check-catalog.mjs",
+    "catalog:icons": "node scripts/catalog-icons.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/filesystem": "^7.0.0",
+    "@capacitor/haptics": "^7.0.5",
+    "@capacitor/local-notifications": "^7.0.7",
+    "@capacitor/share": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0",
+    "@fontsource-variable/hanken-grotesk": "^5.3.0",
+    "@fontsource-variable/newsreader": "^5.2.0",
+    "@mozilla/readability": "^0.6.0",
+    "dompurify": "^3.2.0",
+    "idb": "^8.0.0",
+    "jspdf": "^4.2.1",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "fake-indexeddb": "^6.2.5",
+    "jsdom": "^30.0.0",
+    "vite": "^8.0.10",
+    "vitest": "^4.1.7"
+  }
+}

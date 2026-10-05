@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.vite/
+
+# Android: generado por `cap add android`, pero se versiona porque contiene
+# configuración editada a mano (manifest, iconos).
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/app/release/
+android/app/debug/
+*.apk
+*.aab
+# Builds listas para instalar o subir: `pnpm release`
+Release/
+
+# Firma: NUNCA en el repositorio
+*.keystore
+*.jks
+keystore.properties

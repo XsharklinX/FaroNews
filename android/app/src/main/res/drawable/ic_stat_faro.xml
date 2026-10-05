@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icono de la barra de estado para los avisos: la marca en un solo color. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <group
+        android:scaleX="0.08"
+        android:scaleY="0.08"
+        android:translateX="-9.93"
+        android:translateY="-8.16">
+        <path
+            android:pathData="M184,136h44l8,248h-60z M262,142l110,-22v76l-110,-22z M262,234l70,-14v60l-70,-14z"
+            android:fillColor="#FFFFFF"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="10"
+            android:strokeLineJoin="round" />
+    </group>
+</vector>

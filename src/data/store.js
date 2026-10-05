@@ -1,0 +1,958 @@
+// Estado de la app y todas las operaciones sobre él. Las pantallas leen con
+// useStore() y cambian cosas solo a través de `actions`.
+//
+// En memoria solo están los datos de cada artículo. Su texto (lo que más pesa)
+// vive en la base de datos y se lee al abrirlo: ver ports/db.js.
+
+import { useSyncExternalStore } from 'react';
+import { buildBackup, parseBackup, planRestore } from '../core/backup.js';
+import { discoverFeed, perWeek, readSource } from '../core/discover.js';
+import { isVideoUrl } from '../core/feedParser.js';
+import { findIcon } from '../core/icon.js';
+import { imagesOf } from '../core/images.js';
+import { bodyMatches } from '../core/insights.js';
+import { DEFAULT_NOTIFY } from '../core/notify.js';
+import { buildOpml, parseOpml } from '../core/opml.js';
+import { extractReadable } from '../core/readable.js';
+import { colorFor, htmlToText, readMinutes } from '../core/text.js';
+import { buildToday } from '../core/today.js';
+import { urlKey } from '../core/url.js';
+import { MIN_READABLE } from '../core/links.js';
+import { markSeen, notifyHistory, syncDaily, syncWatcher, takeSavedFromNotifications } from '../ports/background.js';
+import { db } from '../ports/db.js';
+import { tap } from '../ports/haptics.js';
+import { fetchText } from '../ports/http.js';
+import { cacheImages, initImages } from '../ports/images.js';
+import { loadSnapshot, saveExternalCopy, saveSnapshot } from '../ports/snapshot.js';
+
+const DEFAULT_READER = { font: 'serif', margin: 'normal', theme: 'auto' };
+const DEFAULT_SETTINGS = {
+    keywords: [],
+    topics: [],
+    muted: [],
+    fontScale: 1,
+    notifyAlerts: false,
+    dailyOn: false,
+    dailyTime: '07:30',
+    onboarded: false,
+    theme: 'auto',
+    reader: DEFAULT_READER,
+    notify: DEFAULT_NOTIFY,
+    // Qué se ve en las listas: '', 'leer', 'ver' o 'escuchar'.
+    listKind: '',
+    tutorialDone: false,
+    // Copia semanal en Documentos/Faro.
+    autoCopy: true,
+    autoCopyAt: 0,
+    inboxSeenAt: 0,
+};
+const WEEK = 7 * 86400000;
+const REPAIR_EVERY = 86400000;
+const REFRESH_EVERY = 30 * 60000;
+const KEEP_DAYS = 30;
+const FAIL_LIMIT = 3;
+const BROKEN = String.fromCharCode(0xfffd);
+const TOAST_MS = 5000;
+// Con el feed entero ya en la mano no hace falta ir a buscar la página.
+const ENOUGH_TEXT = 2500;
+// Por encima de esto (unas 20 al día) un sitio entra en «lo importante» al seguirlo.
+export const BUSY_PER_WEEK = 150;
+const LEVEL_DOWN = { todo: 'importante', importante: 'alertas', alertas: 'alertas' };
+const LEVEL_NAME = { todo: 'Entra todo', importante: 'Solo lo importante', alertas: 'Solo tus temas' };
+
+// Artículos sueltos, guardados con «Compartir a Faro»: no vienen de un sitio seguido.
+export const LOOSE_ID = 'loose';
+export function sourceOf(article, srcById) {
+    if (!article) return null;
+    if (article.sourceId === LOOSE_ID) return { id: LOOSE_ID, title: article.site || 'Compartido', siteUrl: article.siteUrl || '', color: colorFor(article.site || 'faro'), loose: true };
+    return srcById.get(article.sourceId) || null;
+}
+
+let state = {
+    ready: false,
+    sources: [],
+    articles: [],
+    settings: DEFAULT_SETTINGS,
+    habits: {},
+    today: { date: '', edition: 1, items: [] },
+    refreshing: false,
+    lastRefresh: 0,
+    toast: null,
+    menu: null,
+    compare: null,
+    // Dirección recibida desde «Compartir» de otra app, pendiente de decidir.
+    shared: null,
+    // Lo que pide abrir un aviso que el usuario tocó: { id } o { list: true }.
+    pendingOpen: null,
+    // Historial de avisos enviados, para la bandeja.
+    inbox: [],
+    // Cambia cuando se guardan imágenes nuevas, para que las listas se repinten.
+    imgTick: 0,
+};
+const listeners = new Set();
+
+function set(patch) {
+    state = { ...state, ...patch };
+    for (const fn of listeners) fn();
+}
+const subscribe = (fn) => {
+    listeners.add(fn);
+    return () => listeners.delete(fn);
+};
+export const useStore = () => useSyncExternalStore(subscribe, () => state);
+export const getState = () => state;
+
+const newId = () => crypto.randomUUID();
+
+// Varias operaciones seguidas (importar una lista, por ejemplo) avisan al
+// vigilante una sola vez.
+let watcherTimer;
+function queueWatcherSync() {
+    clearTimeout(watcherTimer);
+    watcherTimer = setTimeout(() => syncWatcher(state), 400);
+}
+
+// Copia automática de lo irrecuperable, fuera de la base de datos: ver
+// ports/snapshot.js. Se agrupan los cambios seguidos en una sola escritura.
+let snapshotTimer;
+function queueSnapshot() {
+    if (!state.ready) return;
+    clearTimeout(snapshotTimer);
+    snapshotTimer = setTimeout(() => actions.snapshotNow(), 3000);
+}
+
+function patchArticle(id, patch) {
+    let updated;
+    const articles = state.articles.map((a) => (a.id === id ? (updated = { ...a, ...patch }) : a));
+    if (!updated) return null;
+    set({ articles });
+    db.put('articles', updated);
+    if ('saved' in patch || 'highlights' in patch) queueSnapshot();
+    return updated;
+}
+
+const todayInput = () => ({ articles: state.articles, sources: state.sources, settings: state.settings, habits: state.habits });
+
+function rebuildToday() {
+    const today = buildToday({ prev: state.today, ...todayInput() });
+    set({ today });
+    db.setMeta('today', today);
+}
+
+// Aviso breve en la parte baja, con una acción opcional para deshacer.
+let toastTimer;
+function showToast(text, undo) {
+    clearTimeout(toastTimer);
+    set({ toast: { id: newId(), text, undo } });
+    toastTimer = setTimeout(() => set({ toast: null }), TOAST_MS);
+}
+
+// Lo que el usuario hace con cada fuente: abrir (o), guardar (s), descartar (d).
+function habit(sourceId, kind, amount = 1) {
+    if (sourceId === LOOSE_ID) return;
+    const prev = state.habits[sourceId] || { o: 0, s: 0, d: 0 };
+    const habits = { ...state.habits, [sourceId]: { ...prev, [kind]: Math.max(0, prev[kind] + amount) } };
+    set({ habits });
+    db.setMeta('habits', habits);
+    queueSnapshot();
+}
+
+function makeSource({ title, siteUrl = '', icon, feedUrl, kind = '', folder = '', level = 'todo', offline = true, priority = false, notify = false, color, perWeek: pace = null, lastOkAt = 0 }) {
+    return {
+        id: newId(),
+        title,
+        siteUrl,
+        // Logo del sitio. Sin definir = todavía no se ha buscado.
+        icon,
+        feedUrl,
+        // 'page' = sitio sin feed: se leen los titulares de su portada.
+        kind,
+        folder: (folder || '').trim(),
+        level,
+        offline,
+        priority,
+        // Avisar de todo lo que publique, con la app cerrada.
+        notify,
+        color: color || colorFor(feedUrl),
+        createdAt: Date.now(),
+        lastOkAt,
+        lastError: '',
+        failCount: 0,
+        perWeek: pace,
+    };
+}
+
+// Datos y texto de un artículo nuevo a partir de un item leído de la fuente.
+function makeArticle(sourceId, item, now, extra = {}) {
+    const text = htmlToText(item.contentHtml);
+    const id = newId();
+    return {
+        meta: {
+            id,
+            sourceId,
+            url: item.url,
+            urlKey: urlKey(item.url),
+            title: item.title,
+            summary: item.summary,
+            author: item.author,
+            image: item.image,
+            // 'audio' = episodio de podcast, 'video' = vídeo, '' = artículo.
+            kind: item.kind || '',
+            audio: item.audio || '',
+            duration: item.duration ?? null,
+            publishedAt: item.publishedAt,
+            fetchedAt: now,
+            minutes: item.duration || readMinutes(text),
+            chars: text.length,
+            full: Boolean(item.fullHtml),
+            read: false,
+            saved: false,
+            dismissed: false,
+            ...extra,
+        },
+        body: { id, contentHtml: item.contentHtml || '', fullHtml: item.fullHtml || '' },
+    };
+}
+
+// Convierte los items de una fuente en artículos nuevos, saltando los que ya hay.
+function ingest(source, items) {
+    const known = new Map(state.articles.map((a) => [a.urlKey, a]));
+    const now = Date.now();
+    const added = [];
+    for (const item of items) {
+        const key = urlKey(item.url);
+        const existing = known.get(key);
+        if (existing) {
+            // Artículo guardado con la codificación rota por una versión anterior.
+            if (existing.title?.includes(BROKEN) && !item.title.includes(BROKEN)) {
+                patchArticle(existing.id, { title: item.title, summary: item.summary });
+                db.get('bodies', existing.id).then((body) => db.put('bodies', { ...body, id: existing.id, contentHtml: item.contentHtml }));
+            }
+            continue;
+        }
+        const article = makeArticle(source.id, item, now);
+        known.set(key, article.meta);
+        added.push(article);
+    }
+    if (added.length) {
+        set({ articles: [...state.articles, ...added.map((a) => a.meta)] });
+        db.putMany('articles', added.map((a) => a.meta));
+        db.putMany('bodies', added.map((a) => a.body));
+    }
+    return added;
+}
+
+function saveSource(source) {
+    const exists = state.sources.some((s) => s.id === source.id);
+    set({ sources: exists ? state.sources.map((s) => (s.id === source.id ? source : s)) : [...state.sources, source] });
+    db.put('sources', source);
+    queueWatcherSync();
+    queueSnapshot();
+}
+
+async function refreshOne(source) {
+    try {
+        const res = await fetchText(source.feedUrl);
+        const feed = readSource(res.text, res.url, source.kind);
+        if (!feed) throw new Error(source.kind === 'page' ? 'La página ya no muestra titulares' : 'El feed dejó de ser válido');
+        ingest(source, feed.items);
+        markSeen(source.feedUrl, feed.items.map((i) => i.url));
+        const current = state.sources.find((s) => s.id === source.id);
+        if (current) {
+            const siteUrl = current.siteUrl || feed.siteUrl || '';
+            // El logo se busca una sola vez, la primera que se conoce la web del sitio.
+            // Un canal de YouTube seguido antes de la 0.3.1 se quedó con el icono de YouTube.
+            const wrong = /youtube\.com/.test(siteUrl) && !current.iconFixed && !/yt3|ggpht|googleusercontent|catalog-icons/.test(current.icon || '');
+            const icon = current.icon === undefined || wrong ? feed.icon || (siteUrl ? await findIcon(siteUrl, fetchText) : '') : current.icon;
+            saveSource({ ...current, siteUrl, icon, iconFixed: true, failCount: 0, lastError: '', lastOkAt: Date.now(), perWeek: perWeek(feed.items) ?? current.perWeek });
+        }
+    } catch (err) {
+        const current = state.sources.find((s) => s.id === source.id);
+        if (!current) return;
+        const failing = { ...current, failCount: (current.failCount || 0) + 1, lastError: String(err?.message || err) };
+        saveSource(failing);
+        if (failing.failCount >= FAIL_LIMIT) await repair(failing);
+    }
+}
+
+// Un sitio que deja de responder suele haber cambiado la dirección de su feed.
+// Se vuelve a buscar desde su portada, como mucho una vez al día.
+async function repair(source) {
+    if (!source.siteUrl || Date.now() - (source.repairAt || 0) < REPAIR_EVERY) return;
+    let found = null;
+    try {
+        found = await discoverFeed(source.siteUrl, fetchText);
+    } catch {
+        // El sitio sigue caído o ya no publica nada que se pueda seguir.
+    }
+    const current = state.sources.find((s) => s.id === source.id);
+    if (!current) return;
+    const moved = found && found.feed.items.length > 0 && urlKey(found.feedUrl) !== urlKey(current.feedUrl) && !state.sources.some((s) => urlKey(s.feedUrl) === urlKey(found.feedUrl));
+    if (!moved) {
+        saveSource({ ...current, repairAt: Date.now() });
+        return;
+    }
+    const fixed = { ...current, feedUrl: found.feedUrl, kind: found.kind || '', failCount: 0, lastError: '', lastOkAt: Date.now(), repairAt: Date.now() };
+    saveSource(fixed);
+    ingest(fixed, found.feed.items);
+    markSeen(fixed.feedUrl, found.feed.items.map((i) => i.url));
+    showToast(`${current.title} cambió de dirección y Faro la encontró`);
+}
+
+async function pool(items, size, worker) {
+    const queue = [...items];
+    await Promise.all(
+        Array.from({ length: Math.min(size, queue.length) }, async () => {
+            while (queue.length) await worker(queue.shift());
+        })
+    );
+}
+
+function dropArticles(ids) {
+    if (!ids.length) return;
+    const gone = new Set(ids);
+    set({ articles: state.articles.filter((a) => !gone.has(a.id)) });
+    db.delMany('articles', ids);
+    db.delMany('bodies', ids);
+}
+
+function prune() {
+    const cutoff = Date.now() - KEEP_DAYS * 86400000;
+    const inToday = new Set(state.today.items.flatMap((it) => [it.id, ...(it.also || [])]));
+    const old = state.articles.filter((a) => !a.saved && !a.highlights?.length && !inToday.has(a.id) && (a.publishedAt || a.fetchedAt) < cutoff && a.fetchedAt < cutoff);
+    dropArticles(old.map((a) => a.id));
+}
+
+// Deja lo que entra en «Hoy» listo para leer sin conexión: el texto completo y
+// las imágenes de cada historia.
+async function downloadToday() {
+    const offline = new Set(state.sources.filter((s) => s.offline).map((s) => s.id));
+    const ids = new Set(state.today.items.map((it) => it.id));
+    const wanted = state.articles.filter((a) => ids.has(a.id) && offline.has(a.sourceId));
+    await pool(wanted.filter((a) => !a.full && !a.fullTried), 3, (a) => actions.ensureFullText(a.id));
+
+    const urls = [];
+    for (const article of wanted) {
+        const body = await db.get('bodies', article.id);
+        urls.push(...imagesOf(article, body?.fullHtml || body?.contentHtml));
+    }
+    if (await cacheImages(urls)) set({ imgTick: state.imgTick + 1 });
+}
+
+// Cuántas historias traería una edición nueva ahora mismo.
+export function nextEditionCount() {
+    return buildToday({ prev: { date: state.today.date, edition: 2, items: [] }, ...todayInput() }).items.length;
+}
+
+// Un artículo que no viene de ninguna fuente seguida: lo compartido desde otra
+// app o un enlace abierto desde el texto de otro artículo.
+function looseArticle(page, readable, extra) {
+    const host = new URL(page.url).hostname.replace(/^www\./, '');
+    const item = {
+        url: page.url,
+        title: readable?.title || host,
+        summary: (readable?.text || '').slice(0, 280),
+        contentHtml: '',
+        fullHtml: readable?.html || '',
+        author: '',
+        image: '',
+        publishedAt: null,
+    };
+    return makeArticle(LOOSE_ID, item, Date.now(), {
+        site: host,
+        siteUrl: new URL(page.url).origin,
+        fullTried: true,
+        minutes: readMinutes(readable?.text || ''),
+        ...extra,
+    });
+}
+
+// Últimos titulares de un sitio del catálogo, ya pedidos en esta sesión.
+const peeks = new Map();
+
+export const actions = {
+    // Lo último de un sitio sin seguirlo: para la vista previa del catálogo.
+    async peekFeed(feedUrl, kind = '') {
+        if (peeks.has(feedUrl)) return peeks.get(feedUrl);
+        // Un sitio sin feed se lee tal cual, sin volver a buscarle uno.
+        const feed = kind === 'page' ? readSource((await fetchText(feedUrl)).text, feedUrl, 'page') || { items: [] } : (await discoverFeed(feedUrl, fetchText)).feed;
+        const items = feed.items
+            .filter((item) => item.title && item.url)
+            .slice(0, 8)
+            .map(({ title, url, image, publishedAt, kind }) => ({ title, url, image: image || '', publishedAt: publishedAt || null, kind: kind || '' }));
+        peeks.set(feedUrl, items);
+        return items;
+    },
+
+    async init() {
+        const [sources, articles, settings, today, lastRefresh, habits] = await Promise.all([
+            db.all('sources'),
+            db.all('articles'),
+            db.getMeta('settings'),
+            db.getMeta('today'),
+            db.getMeta('lastRefresh'),
+            db.getMeta('habits'),
+            initImages(),
+        ]);
+        const merged = {
+            ...DEFAULT_SETTINGS,
+            ...settings,
+            reader: { ...DEFAULT_READER, ...settings?.reader },
+            // Quien tenía encendido el aviso de temas de versiones anteriores lo conserva.
+            notify: { ...DEFAULT_NOTIFY, on: Boolean(settings?.notifyAlerts), ...settings?.notify },
+        };
+        // Las alertas de versiones anteriores pasan a ser temas.
+        if (!settings?.topics && settings?.keywords?.length) {
+            merged.topics = settings.keywords.map((k) => ({ id: newId(), name: k, words: [k], notify: true }));
+        }
+        // Vídeos traídos por una versión que aún no los distinguía de un artículo.
+        for (const a of articles) if (a.kind === undefined) a.kind = isVideoUrl(a.url) ? 'video' : '';
+        // Quien ya tenía sitios no necesita el arranque guiado.
+        if (sources.length) merged.onboarded = true;
+        set({ sources, articles, settings: merged, habits: habits || {}, today: today || state.today, lastRefresh: lastRefresh || 0 });
+
+        // Base de datos vacía pero hay copia automática: el WebView borró los
+        // datos (ver ports/snapshot.js). Se recuperan antes de mostrar nada.
+        let recovered = false;
+        if (!sources.length && !settings) {
+            const copy = await loadSnapshot();
+            if (copy) {
+                try {
+                    await actions.restoreBackup(copy);
+                    recovered = true;
+                } catch {
+                    // Copia ilegible: se arranca de cero.
+                }
+            }
+        }
+        set({ ready: true });
+        if (recovered) showToast('Faro recuperó tus datos tras un fallo del sistema');
+        rebuildToday();
+        queueWatcherSync();
+        actions.refreshIfStale();
+        // Aunque no toque actualizar, lo de Hoy debe quedar listo para leer sin
+        // conexión (por ejemplo, tras instalar una versión nueva).
+        if (!state.refreshing) downloadToday();
+    },
+
+    // Al abrir la app o volver a ella: solo actualiza si ya pasó un rato.
+    refreshIfStale() {
+        if (state.ready && state.sources.length && Date.now() - state.lastRefresh > REFRESH_EVERY) actions.refreshAll();
+    },
+
+    // Busca cómo seguir lo que el usuario pegó y devuelve una vista previa.
+    async previewSite(input) {
+        const { feedUrl, feed, kind = '' } = await discoverFeed(input, fetchText);
+        const duplicate = state.sources.find((s) => urlKey(s.feedUrl) === urlKey(feedUrl));
+        const siteUrl = feed.siteUrl || new URL(feedUrl).origin;
+        return {
+            feedUrl,
+            kind,
+            title: feed.title || new URL(feedUrl).hostname,
+            siteUrl,
+            icon: feed.icon || (await findIcon(siteUrl, fetchText)),
+            items: feed.items,
+            perWeek: perWeek(feed.items),
+            duplicate: Boolean(duplicate),
+        };
+    },
+
+    addSource(preview, { folder = '', level = 'todo', offline = true, priority = false } = {}) {
+        const source = makeSource({ ...preview, folder, level, offline, priority, lastOkAt: Date.now() });
+        saveSource(source);
+        ingest(source, preview.items || []);
+        markSeen(source.feedUrl, (preview.items || []).map((i) => i.url));
+        rebuildToday();
+        downloadToday();
+        return source;
+    },
+
+    // Seguir sitios del catálogo: ya están comprobados, no hace falta buscarlos.
+    // Los que publican muchísimo entran en «lo importante».
+    async followMany(entries, { quiet = false } = {}) {
+        const have = new Set(state.sources.map((s) => urlKey(s.feedUrl)));
+        const added = entries
+            .filter((e) => !have.has(urlKey(e.feed)))
+            .map((e) => {
+                const busy = (e.perWeek || 0) >= BUSY_PER_WEEK;
+                const source = makeSource({ title: e.name, siteUrl: e.site || '', icon: e.icon, feedUrl: e.feed, kind: e.kind || '', folder: e.folder, level: busy ? 'importante' : 'todo', perWeek: e.perWeek ?? null });
+                saveSource(source);
+                return { source, busy };
+            });
+        const busy = added.filter((a) => a.busy).map((a) => a.source.title);
+        if (busy.length && !quiet) {
+            showToast(busy.length === 1 ? `${busy[0]} publica mucho: solo entra lo importante.` : `${busy.length} sitios publican mucho: de ellos solo entra lo importante.`);
+        }
+        await pool(added.map((a) => a.source), 4, refreshOne);
+        rebuildToday();
+        downloadToday();
+        return added.length;
+    },
+
+    followCatalog(entry, folder) {
+        return actions.followMany([{ ...entry, folder }]);
+    },
+
+    updateSource(id, patch) {
+        const current = state.sources.find((s) => s.id === id);
+        if (!current) return;
+        saveSource({ ...current, ...patch });
+        rebuildToday();
+    },
+
+    removeSource(id) {
+        const gone = state.articles.filter((a) => a.sourceId === id).map((a) => a.id);
+        set({ sources: state.sources.filter((s) => s.id !== id) });
+        db.delMany('sources', [id]);
+        dropArticles(gone);
+        rebuildToday();
+        queueWatcherSync();
+        queueSnapshot();
+    },
+
+    async refreshSource(id) {
+        const source = state.sources.find((s) => s.id === id);
+        if (!source) return;
+        await refreshOne(source);
+        rebuildToday();
+    },
+
+    async refreshAll() {
+        if (state.refreshing || !state.sources.length) return;
+        set({ refreshing: true });
+        try {
+            await pool(state.sources, 4, refreshOne);
+            const lastRefresh = Date.now();
+            set({ lastRefresh });
+            db.setMeta('lastRefresh', lastRefresh);
+            rebuildToday();
+            prune();
+        } finally {
+            set({ refreshing: false });
+        }
+        downloadToday();
+    },
+
+    // Abrir un artículo en el lector: lo marca como leído y cuenta como interés.
+    open(id) {
+        const article = state.articles.find((a) => a.id === id);
+        if (!article) return;
+        if (!article.read) habit(article.sourceId, 'o');
+        // La hora de la primera lectura alimenta las estadísticas.
+        patchArticle(id, { read: true, readAt: article.readAt || Date.now() });
+    },
+    markRead(id, read = true) {
+        patchArticle(id, { read });
+    },
+    // Texto de un artículo, que no está en memoria.
+    loadBody(id) {
+        return db.get('bodies', id);
+    },
+    // Hasta dónde llegó el lector en un artículo, de 0 a 1.
+    setPosition(id, pos) {
+        const article = state.articles.find((a) => a.id === id);
+        if (article && Math.abs((article.pos || 0) - pos) > 0.02) patchArticle(id, { pos });
+    },
+
+    toggleSaved(id, { silent = false } = {}) {
+        const article = state.articles.find((x) => x.id === id);
+        if (!article) return;
+        const saved = !article.saved;
+        patchArticle(id, { saved });
+        habit(article.sourceId, 's', saved ? 1 : -1);
+        tap();
+        if (!silent) showToast(saved ? 'Guardada para luego' : 'Quitada de Guardado', () => actions.toggleSaved(id, { silent: true }));
+    },
+
+    dismiss(id) {
+        const article = state.articles.find((x) => x.id === id);
+        if (!article) return;
+        const before = { dismissed: article.dismissed, read: article.read };
+        patchArticle(id, { dismissed: true, read: true });
+        habit(article.sourceId, 'd');
+        rebuildToday();
+        tap();
+        showToast('Descartada', () => {
+            patchArticle(id, before);
+            habit(article.sourceId, 'd', -1);
+            rebuildToday();
+        });
+    },
+
+    // «Menos de esta fuente»: baja un escalón su nivel y lo cuenta como desinterés.
+    lessOf(sourceId) {
+        const source = state.sources.find((s) => s.id === sourceId);
+        if (!source) return;
+        const level = LEVEL_DOWN[source.level];
+        habit(sourceId, 'd', 2);
+        if (level === source.level) {
+            rebuildToday();
+            showToast(`${source.title} ya solo entra por tus temas.`);
+            return;
+        }
+        actions.updateSource(sourceId, { level });
+        showToast(`${source.title} pasa a «${LEVEL_NAME[level]}»`, () => {
+            actions.updateSource(sourceId, { level: source.level });
+            habit(sourceId, 'd', -2);
+        });
+    },
+
+    muteWord(word) {
+        const clean = word.trim();
+        const muted = state.settings.muted || [];
+        if (!clean || muted.some((m) => m.toLowerCase() === clean.toLowerCase())) return;
+        actions.setSettings({ muted: [...muted, clean] });
+        showToast(`«${clean}» silenciada`, () => actions.setSettings({ muted }));
+    },
+
+    // Empieza la edición de tarde: un Hoy nuevo con lo llegado desde la mañana.
+    nextEdition() {
+        set({ today: { date: state.today.date, edition: (state.today.edition || 1) + 1, items: [] } });
+        rebuildToday();
+        downloadToday();
+    },
+
+    resetHabits() {
+        set({ habits: {} });
+        db.setMeta('habits', {});
+        rebuildToday();
+        showToast('Faro olvidó lo aprendido');
+    },
+
+    // Menú de una historia (pulsación larga) y comparación de cobertura.
+    openMenu(id) {
+        window.getSelection?.()?.removeAllRanges();
+        tap(true);
+        set({ menu: id });
+    },
+    closeMenu() {
+        set({ menu: null });
+    },
+    openCompare(ids) {
+        set({ compare: ids });
+    },
+    closeCompare() {
+        set({ compare: null });
+    },
+
+    // El usuario tocó un aviso. Con dirección: se abre esa noticia (trayéndola
+    // antes si la app aún no la tenía). Sin dirección: las novedades.
+    async handleOpen({ url, feed }) {
+        const find = () => (url ? state.articles.find((a) => a.urlKey === urlKey(url)) : null);
+        let article = find();
+        if (url && !article) {
+            const source = feed && state.sources.find((s) => urlKey(s.feedUrl) === urlKey(feed));
+            if (source) {
+                await refreshOne(source);
+                rebuildToday();
+                article = find();
+            }
+        }
+        if (url && !article) showToast('Esa noticia ya no está en el sitio. Aquí tienes lo último.');
+        // Aviso agrupado de un sitio: se abre la página de ese sitio.
+        const site = !article && feed ? state.sources.find((s) => urlKey(s.feedUrl) === urlKey(feed)) : null;
+        set({ pendingOpen: article ? { id: article.id } : site ? { sourceId: site.id } : { list: true } });
+        if (site) actions.refreshSource(site.id);
+        else if (!url) actions.refreshAll();
+    },
+    clearPendingOpen() {
+        set({ pendingOpen: null });
+    },
+
+    // Aplica lo que el usuario guardó desde un aviso sin abrir la app.
+    async applyNotificationSaves() {
+        const saves = await takeSavedFromNotifications();
+        if (!saves.length) return;
+        const feeds = new Set(saves.map((s) => s.feed).filter(Boolean).map(urlKey));
+        const missing = saves.some((s) => !state.articles.some((a) => a.urlKey === urlKey(s.url)));
+        if (missing) {
+            await pool(state.sources.filter((s) => feeds.has(urlKey(s.feedUrl))), 4, refreshOne);
+            rebuildToday();
+        }
+        let done = 0;
+        for (const save of saves) {
+            const article = state.articles.find((a) => a.urlKey === urlKey(save.url));
+            if (!article) continue;
+            if (!article.saved) {
+                patchArticle(article.id, { saved: true });
+                habit(article.sourceId, 's');
+            }
+            done++;
+        }
+        if (done) showToast(done === 1 ? 'Guardada desde un aviso' : `${done} guardadas desde los avisos`);
+    },
+
+    // Por dónde va un episodio de podcast, en segundos.
+    setAudioPosition(id, seconds) {
+        if (state.articles.some((a) => a.id === id)) patchArticle(id, { audioPos: Math.floor(seconds) });
+    },
+
+    setAudioDuration(id, seconds) {
+        const minutes = Math.max(1, Math.round(seconds / 60));
+        if (state.articles.some((a) => a.id === id)) patchArticle(id, { duration: minutes, minutes });
+    },
+
+    markAllRead(sourceId) {
+        const ids = state.articles.filter((a) => a.sourceId === sourceId && !a.read).map((a) => a.id);
+        if (!ids.length) return;
+        const apply = (read) => {
+            const target = new Set(ids);
+            const changed = [];
+            set({ articles: state.articles.map((a) => (target.has(a.id) ? (changed.push({ ...a, read }), changed.at(-1)) : a)) });
+            db.putMany('articles', changed);
+            rebuildToday();
+        };
+        apply(true);
+        showToast(`${ids.length} marcadas como leídas`, () => apply(false));
+    },
+
+    // Artículos cuyo texto contiene todas las palabras buscadas.
+    async searchBodies(query) {
+        const hits = new Set();
+        await db.scan('bodies', (body) => {
+            if (bodyMatches(query, body)) hits.add(body.id);
+        });
+        return hits;
+    },
+
+    async loadInbox() {
+        set({ inbox: await notifyHistory() });
+    },
+
+    // Dirección que llega desde «Compartir» de otra app.
+    setShared(url) {
+        set({ shared: url || null });
+    },
+
+    // Guarda un artículo suelto por su dirección, sin seguir el sitio.
+    async saveLoose(url) {
+        const key = urlKey(url);
+        const existing = state.articles.find((a) => a.urlKey === key);
+        if (existing) {
+            if (!existing.saved) patchArticle(existing.id, { saved: true });
+            showToast('Ya estaba en Faro: guardada para luego');
+            return existing.id;
+        }
+        let page;
+        try {
+            page = await fetchText(url);
+        } catch {
+            throw new Error('No se pudo abrir esa dirección. Revisa la conexión.');
+        }
+        const article = looseArticle(page, extractReadable(page.text, page.url), { saved: true });
+        set({ articles: [...state.articles, article.meta] });
+        db.put('articles', article.meta);
+        db.put('bodies', article.body);
+        showToast('Guardada para luego');
+        return article.meta.id;
+    },
+
+    // Abre dentro de Faro un enlace del texto de un artículo. Devuelve el id
+    // de lo que hay que mostrar, o null si esa página no se deja leer aquí.
+    async openLink(url) {
+        const known = (href) => state.articles.find((a) => a.urlKey === urlKey(href));
+        const existing = known(url);
+        if (existing) return existing.id;
+        let page;
+        try {
+            page = await fetchText(url);
+        } catch {
+            return null;
+        }
+        // El enlace podía ser un acortador que lleva a algo que ya está aquí.
+        const landed = known(page.url);
+        if (landed) return landed.id;
+        const readable = extractReadable(page.text, page.url);
+        if ((readable?.text || '').length < MIN_READABLE) return null;
+        // No es una noticia recibida: se lee y no aparece en las listas.
+        const article = looseArticle(page, readable, { read: true, dismissed: true, readAt: Date.now() });
+        set({ articles: [...state.articles, article.meta] });
+        db.put('articles', article.meta);
+        db.put('bodies', article.body);
+        return article.meta.id;
+    },
+
+    // Da por leídas varias historias a la vez (una sección de Hoy).
+    markListRead(ids) {
+        const pending = new Set(state.articles.filter((a) => ids.includes(a.id) && !a.read).map((a) => a.id));
+        if (!pending.size) return;
+        const apply = (read) => {
+            const changed = [];
+            set({ articles: state.articles.map((a) => (pending.has(a.id) ? (changed.push({ ...a, read }), changed.at(-1)) : a)) });
+            db.putMany('articles', changed);
+        };
+        apply(true);
+        showToast(pending.size === 1 ? 'Marcada como leída' : `${pending.size} marcadas como leídas`, () => apply(false));
+    },
+
+    toast: showToast,
+    clearToast() {
+        clearTimeout(toastTimer);
+        set({ toast: null });
+    },
+    undoToast() {
+        const undo = state.toast?.undo;
+        actions.clearToast();
+        undo?.();
+    },
+
+    setSettings(patch) {
+        const settings = { ...state.settings, ...patch };
+        set({ settings });
+        db.setMeta('settings', settings);
+        queueSnapshot();
+        if ('topics' in patch || 'muted' in patch) rebuildToday();
+        if ('topics' in patch || 'muted' in patch || 'notify' in patch) queueWatcherSync();
+        if ('dailyOn' in patch || 'dailyTime' in patch) syncDaily(settings);
+    },
+    setNotify(patch) {
+        actions.setSettings({ notify: { ...DEFAULT_NOTIFY, ...state.settings.notify, ...patch } });
+    },
+    setReader(patch) {
+        actions.setSettings({ reader: { ...state.settings.reader, ...patch } });
+    },
+
+    saveTopic(topic) {
+        const topics = state.settings.topics || [];
+        const clean = { notify: true, ...topic, id: topic.id || newId(), name: topic.name.trim(), words: topic.words.map((w) => w.trim()).filter(Boolean) };
+        const exists = topics.some((t) => t.id === clean.id);
+        actions.setSettings({ topics: exists ? topics.map((t) => (t.id === clean.id ? clean : t)) : [...topics, clean] });
+        return clean;
+    },
+    removeTopic(id) {
+        actions.setSettings({ topics: (state.settings.topics || []).filter((t) => t.id !== id) });
+    },
+
+    addHighlight(articleId, text) {
+        const article = state.articles.find((a) => a.id === articleId);
+        const clean = text.replace(/\s+/g, ' ').trim();
+        if (!article || clean.length < 3) return null;
+        const highlight = { id: newId(), text: clean, note: '', createdAt: Date.now() };
+        patchArticle(articleId, { highlights: [...(article.highlights || []), highlight] });
+        habit(article.sourceId, 's');
+        tap();
+        return highlight;
+    },
+    updateHighlight(articleId, id, patch) {
+        const article = state.articles.find((a) => a.id === articleId);
+        if (article) patchArticle(articleId, { highlights: (article.highlights || []).map((h) => (h.id === id ? { ...h, ...patch } : h)) });
+    },
+    removeHighlight(articleId, id) {
+        const article = state.articles.find((a) => a.id === articleId);
+        if (article) patchArticle(articleId, { highlights: (article.highlights || []).filter((h) => h.id !== id) });
+    },
+
+    // Trae la página del artículo y guarda su texto limpio. No hace falta si el
+    // feed ya traía el artículo entero, ni tiene sentido en vídeos y podcasts.
+    async ensureFullText(id) {
+        const article = state.articles.find((a) => a.id === id);
+        if (!article || article.full || article.fullTried || article.kind || article.chars > ENOUGH_TEXT) return;
+        try {
+            const res = await fetchText(article.url);
+            const readable = extractReadable(res.text, res.url);
+            if (readable) {
+                const body = (await db.get('bodies', id)) || { id, contentHtml: '' };
+                await db.put('bodies', { ...body, fullHtml: readable.html });
+                patchArticle(id, { full: true, fullTried: true, minutes: readMinutes(readable.text), summary: article.summary || readable.text.slice(0, 280) });
+            } else {
+                patchArticle(id, { fullTried: true });
+            }
+        } catch {
+            // Sin red: se reintenta la próxima vez que se abra.
+        }
+    },
+
+    async importOpml(text) {
+        const have = new Set(state.sources.map((s) => urlKey(s.feedUrl)));
+        const entries = parseOpml(text).filter((e) => !have.has(urlKey(e.feedUrl)));
+        for (const e of entries) {
+            let host = e.feedUrl;
+            try {
+                host = new URL(e.feedUrl).hostname;
+            } catch {
+                continue;
+            }
+            saveSource(makeSource({ title: e.title || host, siteUrl: e.siteUrl, feedUrl: e.feedUrl, folder: e.folder || '' }));
+        }
+        if (entries.length) actions.refreshAll();
+        return entries.length;
+    },
+
+    exportOpml() {
+        return buildOpml(state.sources);
+    },
+
+    // Escribe ya la copia automática. También se llama al salir de la app.
+    async snapshotNow() {
+        clearTimeout(snapshotTimer);
+        if (!state.ready) return;
+        try {
+            const copy = await actions.exportBackup();
+            await saveSnapshot(copy);
+            // Una vez por semana, además, a Documentos/Faro.
+            if (state.settings.autoCopy !== false && Date.now() - (state.settings.autoCopyAt || 0) > WEEK && (await saveExternalCopy(copy))) {
+                actions.setSettings({ autoCopyAt: Date.now() });
+            }
+        } catch {
+            // Sin espacio o sin permiso: se reintenta con el siguiente cambio.
+        }
+    },
+
+    // Copia en Documentos/Faro ahora mismo. Devuelve si se pudo escribir.
+    async copyToDocuments() {
+        const ok = await saveExternalCopy(await actions.exportBackup());
+        if (ok) actions.setSettings({ autoCopyAt: Date.now() });
+        return ok;
+    },
+
+    // Copia de seguridad: todo lo que el usuario ha construido, en un archivo.
+    async exportBackup() {
+        const keep = state.articles.filter((a) => a.saved || a.highlights?.length);
+        const bodies = new Map();
+        for (const a of keep) bodies.set(a.id, await db.get('bodies', a.id));
+        return JSON.stringify(buildBackup({ ...state, bodies, version: __APP_VERSION__ }));
+    },
+
+    // Fusiona una copia con lo que ya hay: añade lo que falta, no borra nada.
+    async restoreBackup(text) {
+        const backup = parseBackup(text);
+        const plan = planRestore(backup, state);
+
+        for (const s of plan.newSources) saveSource(makeSource(s));
+        const idByFeed = new Map(state.sources.map((s) => [urlKey(s.feedUrl), s.id]));
+
+        const now = Date.now();
+        const added = plan.newArticles.map((a) => {
+            const sourceId = (a.feedUrl && idByFeed.get(urlKey(a.feedUrl))) || LOOSE_ID;
+            const { contentHtml, fullHtml, feedUrl: _, ...rest } = a;
+            const article = makeArticle(sourceId, { ...a, contentHtml, fullHtml }, a.fetchedAt || now, {
+                ...rest,
+                sourceId,
+                fullTried: Boolean(fullHtml),
+                site: a.site || new URL(a.url).hostname.replace(/^www\./, ''),
+            });
+            return article;
+        });
+        if (added.length) {
+            set({ articles: [...state.articles, ...added.map((a) => a.meta)] });
+            await db.putMany('articles', added.map((a) => a.meta));
+            await db.putMany('bodies', added.map((a) => a.body));
+        }
+        for (const m of plan.mergeArticles) patchArticle(m.id, { saved: m.saved, highlights: m.highlights });
+
+        const habits = { ...state.habits };
+        for (const [feedUrl, h] of Object.entries(plan.habits)) {
+            const id = idByFeed.get(urlKey(feedUrl));
+            if (id && !habits[id]) habits[id] = h;
+        }
+        set({ habits });
+        db.setMeta('habits', habits);
+        actions.setSettings(plan.settings);
+
+        rebuildToday();
+        if (plan.newSources.length) actions.refreshAll();
+        return { sources: plan.newSources.length, articles: added.length + plan.mergeArticles.length };
+    },
+};
+
+export const isFailing = (source) => (source.failCount || 0) >= FAIL_LIMIT;

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Accesos directos al mantener pulsado el icono de Faro. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="hoy"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_hoy"
+        android:shortcutShortLabel="@string/shortcut_hoy"
+        android:shortcutLongLabel="@string/shortcut_hoy_long">
+        <intent
+            android:action="com.faro.lector.SHORTCUT"
+            android:targetPackage="com.faronews.app"
+            android:targetClass="com.faro.lector.MainActivity"
+            android:data="faro://ir/hoy" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="buscar"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_buscar"
+        android:shortcutShortLabel="@string/shortcut_buscar"
+        android:shortcutLongLabel="@string/shortcut_buscar_long">
+        <intent
+            android:action="com.faro.lector.SHORTCUT"
+            android:targetPackage="com.faronews.app"
+            android:targetClass="com.faro.lector.MainActivity"
+            android:data="faro://ir/buscar" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="guardado"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_guardado"
+        android:shortcutShortLabel="@string/shortcut_guardado"
+        android:shortcutLongLabel="@string/shortcut_guardado_long">
+        <intent
+            android:action="com.faro.lector.SHORTCUT"
+            android:targetPackage="com.faronews.app"
+            android:targetClass="com.faro.lector.MainActivity"
+            android:data="faro://ir/guardado" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="anadir"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_anadir"
+        android:shortcutShortLabel="@string/shortcut_anadir"
+        android:shortcutLongLabel="@string/shortcut_anadir_long">
+        <intent
+            android:action="com.faro.lector.SHORTCUT"
+            android:targetPackage="com.faronews.app"
+            android:targetClass="com.faro.lector.MainActivity"
+            android:data="faro://ir/anadir" />
+    </shortcut>
+</shortcuts>

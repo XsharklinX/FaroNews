@@ -1,0 +1,2996 @@
+{
+  "categories": [
+    {
+      "id": "tecnologia",
+      "name": "Tecnología"
+    },
+    {
+      "id": "gaming",
+      "name": "Gaming"
+    },
+    {
+      "id": "nacionales",
+      "name": "Nacionales"
+    },
+    {
+      "id": "mundo",
+      "name": "Geopolítica"
+    },
+    {
+      "id": "economia",
+      "name": "Economía"
+    },
+    {
+      "id": "ia",
+      "name": "IA"
+    },
+    {
+      "id": "desarrollo",
+      "name": "Desarrollo"
+    },
+    {
+      "id": "ciencia",
+      "name": "Ciencia"
+    },
+    {
+      "id": "deportes",
+      "name": "Deportes"
+    },
+    {
+      "id": "cultura",
+      "name": "Cine y cultura"
+    },
+    {
+      "id": "video",
+      "name": "YouTube"
+    },
+    {
+      "id": "podcasts",
+      "name": "Podcasts"
+    },
+    {
+      "id": "salud",
+      "name": "Salud"
+    },
+    {
+      "id": "motor",
+      "name": "Motor"
+    },
+    {
+      "id": "viajes",
+      "name": "Viajes"
+    },
+    {
+      "id": "musica",
+      "name": "Música"
+    },
+    {
+      "id": "libros",
+      "name": "Libros"
+    },
+    {
+      "id": "anime",
+      "name": "Anime y manga"
+    },
+    {
+      "id": "gastronomia",
+      "name": "Gastronomía"
+    }
+  ],
+  "countries": [
+    {
+      "id": "es",
+      "name": "España"
+    },
+    {
+      "id": "mx",
+      "name": "México"
+    },
+    {
+      "id": "co",
+      "name": "Colombia"
+    },
+    {
+      "id": "ar",
+      "name": "Argentina"
+    },
+    {
+      "id": "cl",
+      "name": "Chile"
+    },
+    {
+      "id": "pe",
+      "name": "Perú"
+    },
+    {
+      "id": "ec",
+      "name": "Ecuador"
+    },
+    {
+      "id": "ve",
+      "name": "Venezuela"
+    },
+    {
+      "id": "uy",
+      "name": "Uruguay"
+    },
+    {
+      "id": "cr",
+      "name": "Costa Rica"
+    },
+    {
+      "id": "us",
+      "name": "EE. UU. en español"
+    },
+    {
+      "id": "do",
+      "name": "Rep. Dominicana"
+    },
+    {
+      "id": "pa",
+      "name": "Panamá"
+    },
+    {
+      "id": "gt",
+      "name": "Guatemala"
+    },
+    {
+      "id": "bo",
+      "name": "Bolivia"
+    },
+    {
+      "id": "py",
+      "name": "Paraguay"
+    },
+    {
+      "id": "pr",
+      "name": "Puerto Rico"
+    }
+  ],
+  "sources": [
+    {
+      "name": "Xataka",
+      "cat": "tecnologia",
+      "desc": "Tecnología de consumo, ciencia y análisis",
+      "top": true,
+      "feed": "https://www.xataka.com/feedburner.xml",
+      "perWeek": 182,
+      "site": "https://www.xataka.com/",
+      "icon": "catalog-icons/xataka-tecnologia.png"
+    },
+    {
+      "name": "Hipertextual",
+      "cat": "tecnologia",
+      "desc": "Tecnología, ciencia y cultura digital",
+      "top": true,
+      "feed": "https://hipertextual.com/feed/",
+      "perWeek": 90,
+      "site": "https://hipertextual.com/",
+      "icon": "catalog-icons/hipertextual-tecnologia.png"
+    },
+    {
+      "name": "Microsiervos",
+      "cat": "tecnologia",
+      "desc": "Curiosidades de tecnología, ciencia e internet",
+      "feed": "https://www.microsiervos.com/index.xml",
+      "perWeek": 52,
+      "top": true,
+      "site": "https://www.microsiervos.com/",
+      "icon": "catalog-icons/microsiervos-tecnologia.png"
+    },
+    {
+      "name": "Applesfera",
+      "cat": "tecnologia",
+      "desc": "Todo sobre Apple",
+      "feed": "https://www.applesfera.com/feedburner.xml",
+      "perWeek": 46,
+      "site": "https://www.applesfera.com/",
+      "icon": "catalog-icons/applesfera-tecnologia.png"
+    },
+    {
+      "name": "MuyComputer",
+      "cat": "tecnologia",
+      "desc": "Hardware, PC y actualidad tecnológica",
+      "feed": "https://www.muycomputer.com/feed/",
+      "perWeek": 45,
+      "site": "https://www.muycomputer.com/",
+      "icon": "catalog-icons/muycomputer-tecnologia.png"
+    },
+    {
+      "name": "WWWhat's New",
+      "cat": "tecnologia",
+      "desc": "Aplicaciones y novedades de la web",
+      "feed": "https://wwwhatsnew.com/feed/",
+      "perWeek": 47,
+      "site": "https://wwwhatsnew.com/",
+      "icon": "catalog-icons/wwwhat-s-new-tecnologia.png"
+    },
+    {
+      "name": "FayerWayer",
+      "cat": "tecnologia",
+      "desc": "Tecnología desde Latinoamérica",
+      "feed": "https://www.fayerwayer.com/arc/outboundfeeds/rss/",
+      "perWeek": 17,
+      "site": "https://www.fayerwayer.com/",
+      "icon": "catalog-icons/fayerwayer-tecnologia.png"
+    },
+    {
+      "name": "The Verge",
+      "cat": "tecnologia",
+      "desc": "Tecnología y cultura digital",
+      "lang": "en",
+      "feed": "https://www.theverge.com/rss/index.xml",
+      "perWeek": 70,
+      "site": "https://www.theverge.com/",
+      "icon": "catalog-icons/the-verge-tecnologia.png"
+    },
+    {
+      "name": "Ars Technica",
+      "cat": "tecnologia",
+      "desc": "Tecnología a fondo",
+      "lang": "en",
+      "feed": "https://arstechnica.com/feed/",
+      "perWeek": 51,
+      "site": "https://arstechnica.com/",
+      "icon": "catalog-icons/ars-technica-tecnologia.png"
+    },
+    {
+      "name": "TechCrunch",
+      "cat": "tecnologia",
+      "desc": "Startups y negocio tecnológico",
+      "lang": "en",
+      "feed": "https://techcrunch.com/feed/",
+      "perWeek": 64,
+      "site": "https://techcrunch.com/",
+      "icon": "catalog-icons/techcrunch-tecnologia.png"
+    },
+    {
+      "name": "Vandal",
+      "cat": "gaming",
+      "desc": "Noticias, análisis y guías de videojuegos",
+      "top": true,
+      "feed": "https://vandal.elespanol.com/xml.cgi",
+      "perWeek": 104,
+      "site": "https://vandal.elespanol.com/",
+      "icon": "catalog-icons/vandal-gaming.png"
+    },
+    {
+      "name": "3DJuegos",
+      "cat": "gaming",
+      "desc": "Actualidad y análisis de videojuegos",
+      "top": true,
+      "feed": "https://www.3djuegos.com/feedburner.xml",
+      "perWeek": 118,
+      "site": "https://www.3djuegos.com/",
+      "icon": "catalog-icons/3djuegos-gaming.png"
+    },
+    {
+      "name": "VidaExtra",
+      "cat": "gaming",
+      "desc": "Videojuegos con opinión",
+      "top": true,
+      "feed": "https://www.vidaextra.com/feedburner.xml",
+      "perWeek": 67,
+      "site": "https://www.vidaextra.com/",
+      "icon": "catalog-icons/vidaextra-gaming.png"
+    },
+    {
+      "name": "MeriStation",
+      "cat": "gaming",
+      "desc": "Videojuegos, guías y lanzamientos",
+      "feed": "https://feeds.as.com/mrss-s/pages/as/site/as.com/section/meristation/portada",
+      "perWeek": 1,
+      "site": "https://as.com/",
+      "icon": "catalog-icons/meristation-gaming.png"
+    },
+    {
+      "name": "Eurogamer",
+      "cat": "gaming",
+      "desc": "Análisis y reportajes de videojuegos",
+      "feed": "https://www.eurogamer.es/feed",
+      "perWeek": 26,
+      "site": "https://www.eurogamer.es/feed",
+      "icon": "catalog-icons/eurogamer-gaming.png"
+    },
+    {
+      "name": "Nintenderos",
+      "cat": "gaming",
+      "desc": "Todo sobre Nintendo",
+      "feed": "https://www.nintenderos.com/feed/",
+      "perWeek": 63,
+      "site": "https://www.nintenderos.com/",
+      "icon": "catalog-icons/nintenderos-gaming.png"
+    },
+    {
+      "name": "IGN España",
+      "cat": "gaming",
+      "desc": "Videojuegos, cine y series",
+      "feed": "https://es.ign.com/feed.xml",
+      "perWeek": 117,
+      "site": "https://es.ign.com/",
+      "icon": "catalog-icons/ign-espana-gaming.png"
+    },
+    {
+      "name": "PC Gamer",
+      "cat": "gaming",
+      "desc": "Juegos de PC",
+      "lang": "en",
+      "feed": "https://www.pcgamer.com/feeds.xml",
+      "perWeek": 162,
+      "site": "https://www.pcgamer.com/feeds.xml",
+      "icon": "catalog-icons/pc-gamer-gaming.png"
+    },
+    {
+      "name": "Rock Paper Shotgun",
+      "cat": "gaming",
+      "desc": "Juegos de PC con criterio propio",
+      "lang": "en",
+      "feed": "https://www.rockpapershotgun.com/feed",
+      "perWeek": 45,
+      "site": "https://www.rockpapershotgun.com/feed",
+      "icon": "catalog-icons/rock-paper-shotgun-gaming.png"
+    },
+    {
+      "name": "El País",
+      "cat": "nacionales",
+      "country": "es",
+      "desc": "Diario generalista",
+      "top": true,
+      "feed": "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada",
+      "perWeek": 21,
+      "site": "https://elpais.com/",
+      "icon": "catalog-icons/el-pais-es.png"
+    },
+    {
+      "name": "elDiario.es",
+      "cat": "nacionales",
+      "country": "es",
+      "desc": "Periodismo independiente",
+      "top": true,
+      "feed": "https://www.eldiario.es/rss/",
+      "perWeek": 23,
+      "site": "https://www.eldiario.es/",
+      "icon": "catalog-icons/eldiario-es-es.png"
+    },
+    {
+      "name": "El Mundo",
+      "cat": "nacionales",
+      "country": "es",
+      "desc": "Diario generalista",
+      "feed": "https://e00-elmundo.uecdn.es/elmundo/rss/portada.xml",
+      "perWeek": 182,
+      "top": true,
+      "site": "https://www.elmundo.es/",
+      "icon": "catalog-icons/el-mundo-es.png"
+    },
+    {
+      "name": "20minutos",
+      "cat": "nacionales",
+      "country": "es",
+      "desc": "Actualidad al minuto",
+      "feed": "https://www.20minutos.es/rss",
+      "perWeek": 1,
+      "site": "https://www.20minutos.es/",
+      "icon": "catalog-icons/20minutos-es.png"
+    },
+    {
+      "name": "La Vanguardia",
+      "cat": "nacionales",
+      "country": "es",
+      "desc": "Diario generalista",
+      "feed": "https://www.lavanguardia.com/rss/home.xml",
+      "perWeek": 3,
+      "site": "https://www.lavanguardia.com/",
+      "icon": "catalog-icons/la-vanguardia-es.png"
+    },
+    {
+      "name": "El Confidencial",
+      "cat": "nacionales",
+      "country": "es",
+      "desc": "Política y actualidad",
+      "feed": "https://rss.elconfidencial.com/espana/",
+      "perWeek": 105,
+      "site": "https://rss.elconfidencial.com/espana/",
+      "icon": "catalog-icons/el-confidencial-es.png"
+    },
+    {
+      "name": "El Universal",
+      "cat": "nacionales",
+      "country": "mx",
+      "desc": "Diario generalista",
+      "top": true,
+      "feed": "https://www.eluniversal.com.mx/arc/outboundfeeds/rss/?outputType=xml",
+      "perWeek": 360,
+      "site": "https://www.eluniversal.com.mx/",
+      "icon": "catalog-icons/el-universal-mx.png"
+    },
+    {
+      "name": "La Jornada",
+      "cat": "nacionales",
+      "country": "mx",
+      "desc": "Diario generalista",
+      "feed": "https://www.jornada.com.mx/rss/edicion.xml",
+      "perWeek": 595,
+      "top": true,
+      "site": "https://www.jornada.com.mx/2026/10/04/"
+    },
+    {
+      "name": "El Tiempo",
+      "cat": "nacionales",
+      "country": "co",
+      "desc": "Diario generalista",
+      "top": true,
+      "feed": "https://www.eltiempo.com/rss/colombia.xml",
+      "perWeek": 70,
+      "site": "https://www.eltiempo.com/",
+      "icon": "catalog-icons/el-tiempo-co.png"
+    },
+    {
+      "name": "La Silla Vacía",
+      "cat": "nacionales",
+      "country": "co",
+      "desc": "Política y poder",
+      "top": true,
+      "feed": "https://www.lasillavacia.com/feed/",
+      "perWeek": 70,
+      "site": "https://www.lasillavacia.com/",
+      "icon": "catalog-icons/la-silla-vacia-co.png"
+    },
+    {
+      "name": "Semana",
+      "cat": "nacionales",
+      "country": "co",
+      "desc": "Actualidad y análisis",
+      "feed": "https://www.semana.com/arc/outboundfeeds/rss/?outputType=xml",
+      "perWeek": 700,
+      "top": true,
+      "site": "https://www.semana.com/",
+      "icon": "catalog-icons/semana-co.png"
+    },
+    {
+      "name": "Infobae Colombia",
+      "cat": "nacionales",
+      "country": "co",
+      "desc": "Actualidad al minuto",
+      "feed": "https://www.infobae.com/arc/outboundfeeds/rss/category/colombia/",
+      "perWeek": 614,
+      "site": "https://www.infobae.com/",
+      "icon": "catalog-icons/infobae-colombia-co.png"
+    },
+    {
+      "name": "Clarín",
+      "cat": "nacionales",
+      "country": "ar",
+      "desc": "Diario generalista",
+      "top": true,
+      "feed": "https://www.clarin.com/rss/lo-ultimo/",
+      "perWeek": 70,
+      "site": "https://www.clarin.com/",
+      "icon": "catalog-icons/clarin-ar.png"
+    },
+    {
+      "name": "La Nación",
+      "cat": "nacionales",
+      "country": "ar",
+      "desc": "Diario generalista",
+      "top": true,
+      "feed": "https://www.lanacion.com.ar/arc/outboundfeeds/rss/?outputType=xml",
+      "perWeek": 679,
+      "site": "https://www.lanacion.com.ar/",
+      "icon": "catalog-icons/la-nacion-ar.png"
+    },
+    {
+      "name": "Infobae",
+      "cat": "nacionales",
+      "country": "ar",
+      "desc": "Actualidad al minuto",
+      "top": true,
+      "feed": "https://www.infobae.com/arc/outboundfeeds/rss/",
+      "perWeek": 700,
+      "site": "https://www.infobae.com/",
+      "icon": "catalog-icons/infobae-ar.png"
+    },
+    {
+      "name": "Página 12",
+      "cat": "nacionales",
+      "country": "ar",
+      "desc": "Diario generalista",
+      "feed": "https://www.pagina12.com.ar/arc/outboundfeeds/rss/portada/",
+      "perWeek": 28,
+      "site": "https://www.pagina12.com.ar/",
+      "icon": "catalog-icons/pagina-12-ar.png"
+    },
+    {
+      "name": "Ámbito",
+      "cat": "nacionales",
+      "country": "ar",
+      "desc": "Economía y política",
+      "feed": "https://www.ambito.com/rss/pages/home.xml",
+      "perWeek": 66,
+      "site": "https://www.ambito.com/",
+      "icon": "catalog-icons/ambito-ar.png"
+    },
+    {
+      "name": "La Tercera",
+      "cat": "nacionales",
+      "country": "cl",
+      "desc": "Diario generalista",
+      "top": true,
+      "feed": "https://www.latercera.com/arc/outboundfeeds/rss/?outputType=xml",
+      "perWeek": 322,
+      "site": "https://www.latercera.com/",
+      "icon": "catalog-icons/la-tercera-cl.png"
+    },
+    {
+      "name": "BioBioChile",
+      "cat": "nacionales",
+      "country": "cl",
+      "desc": "Actualidad al minuto",
+      "top": true,
+      "feed": "https://feeds.feedburner.com/radiobiobio/NNeJ",
+      "perWeek": 140,
+      "site": "https://www.biobiochile.cl/",
+      "icon": "catalog-icons/biobiochile-cl.png"
+    },
+    {
+      "name": "CIPER",
+      "cat": "nacionales",
+      "country": "cl",
+      "desc": "Periodismo de investigación",
+      "feed": "https://www.ciperchile.cl/feed/",
+      "perWeek": 35,
+      "top": true,
+      "site": "https://www.ciperchile.cl/"
+    },
+    {
+      "name": "El Comercio",
+      "cat": "nacionales",
+      "country": "pe",
+      "desc": "Diario generalista",
+      "top": true,
+      "feed": "https://elcomercio.pe/arc/outboundfeeds/rss/?outputType=xml",
+      "perWeek": 2,
+      "site": "https://elcomercio.pe/",
+      "icon": "catalog-icons/el-comercio-pe.png"
+    },
+    {
+      "name": "RPP Noticias",
+      "cat": "nacionales",
+      "country": "pe",
+      "desc": "Radio y actualidad",
+      "top": true,
+      "feed": "https://rpp.pe/rss",
+      "perWeek": 1,
+      "site": "https://rpp.pe/",
+      "icon": "catalog-icons/rpp-noticias-pe.png"
+    },
+    {
+      "name": "La República",
+      "cat": "nacionales",
+      "country": "pe",
+      "desc": "Diario generalista",
+      "top": true,
+      "feed": "https://larepublica.pe/rss/home.xml",
+      "perWeek": 984,
+      "site": "https://larepublica.pe/",
+      "icon": "catalog-icons/la-republica-pe.png"
+    },
+    {
+      "name": "Gestión",
+      "cat": "nacionales",
+      "country": "pe",
+      "desc": "Economía y negocios",
+      "feed": "https://gestion.pe/arc/outboundfeeds/rss/?outputType=xml",
+      "perWeek": 109,
+      "site": "https://gestion.pe/",
+      "icon": "catalog-icons/gestion-pe.png"
+    },
+    {
+      "name": "IDL-Reporteros",
+      "cat": "nacionales",
+      "country": "pe",
+      "desc": "Periodismo de investigación",
+      "feed": "https://www.idl-reporteros.pe/feed/",
+      "perWeek": 1,
+      "site": "https://www.idl-reporteros.pe/",
+      "icon": "catalog-icons/idl-reporteros-pe.png"
+    },
+    {
+      "name": "BBC Mundo",
+      "cat": "mundo",
+      "desc": "Actualidad internacional",
+      "top": true,
+      "feed": "https://feeds.bbci.co.uk/mundo/rss.xml",
+      "perWeek": 38,
+      "site": "https://www.bbc.com/mundo",
+      "icon": "catalog-icons/bbc-mundo-mundo.png"
+    },
+    {
+      "name": "El Orden Mundial",
+      "cat": "mundo",
+      "desc": "Geopolítica explicada",
+      "top": true,
+      "feed": "https://elordenmundial.com/feed/",
+      "perWeek": 8,
+      "site": "https://elordenmundial.com/",
+      "icon": "catalog-icons/el-orden-mundial-mundo.png"
+    },
+    {
+      "name": "DW Español",
+      "cat": "mundo",
+      "desc": "Actualidad internacional desde Alemania",
+      "top": true,
+      "feed": "https://rss.dw.com/xml/rss-sp-all",
+      "perWeek": 54,
+      "site": "https://www.dw.com/spanish/?maca=spa-rss-sp-all-1122-xml-mrss",
+      "icon": "catalog-icons/dw-espanol-mundo.png"
+    },
+    {
+      "name": "El País Internacional",
+      "cat": "mundo",
+      "desc": "Sección internacional",
+      "feed": "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/internacional/portada",
+      "perWeek": 111,
+      "site": "https://elpais.com/",
+      "icon": "catalog-icons/el-pais-internacional-mundo.png"
+    },
+    {
+      "name": "France 24",
+      "cat": "mundo",
+      "desc": "Actualidad internacional desde Francia",
+      "feed": "https://www.france24.com/es/rss",
+      "perWeek": 168,
+      "site": "https://www.france24.com/es/",
+      "icon": "catalog-icons/france-24-mundo.png"
+    },
+    {
+      "name": "Euronews",
+      "cat": "mundo",
+      "desc": "Actualidad europea e internacional",
+      "feed": "https://es.euronews.com/rss",
+      "perWeek": 240,
+      "site": "https://es.euronews.com/",
+      "icon": "catalog-icons/euronews-mundo.png"
+    },
+    {
+      "name": "Descifrando la Guerra",
+      "cat": "mundo",
+      "desc": "Conflictos y análisis internacional",
+      "feed": "https://www.descifrandolaguerra.es/feed/",
+      "perWeek": 14,
+      "site": "https://www.descifrandolaguerra.es/",
+      "icon": "catalog-icons/descifrando-la-guerra-mundo.png"
+    },
+    {
+      "name": "Al Jazeera",
+      "cat": "mundo",
+      "desc": "Actualidad internacional",
+      "lang": "en",
+      "feed": "https://www.aljazeera.com/xml/rss/all.xml",
+      "perWeek": 175,
+      "site": "https://www.aljazeera.com/",
+      "icon": "catalog-icons/al-jazeera-mundo.png"
+    },
+    {
+      "name": "Foreign Policy",
+      "cat": "mundo",
+      "desc": "Política exterior y análisis",
+      "lang": "en",
+      "feed": "https://foreignpolicy.com/feed/",
+      "perWeek": 50,
+      "site": "https://foreignpolicy.com/",
+      "icon": "catalog-icons/foreign-policy-mundo.png"
+    },
+    {
+      "name": "El Economista",
+      "cat": "economia",
+      "desc": "Mercados y economía",
+      "top": true,
+      "feed": "https://www.eleconomista.es/rss/rss-seleccion-ee.php",
+      "perWeek": 140,
+      "site": "http://www.eleconomista.es/",
+      "icon": "catalog-icons/el-economista-economia.png"
+    },
+    {
+      "name": "El Blog Salmón",
+      "cat": "economia",
+      "desc": "Economía explicada",
+      "top": true,
+      "feed": "https://www.elblogsalmon.com/feedburner.xml",
+      "perWeek": 33,
+      "site": "https://www.elblogsalmon.com/",
+      "icon": "catalog-icons/el-blog-salmon-economia.png"
+    },
+    {
+      "name": "Expansión",
+      "cat": "economia",
+      "desc": "Empresas y mercados",
+      "top": true,
+      "feed": "https://e00-expansion.uecdn.es/rss/portada.xml",
+      "perWeek": 1,
+      "site": "http://www.expansion.com/",
+      "icon": "catalog-icons/expansion-economia.png"
+    },
+    {
+      "name": "Cinco Días",
+      "cat": "economia",
+      "desc": "Economía y empresas",
+      "feed": "https://feeds.elpais.com/mrss-s/pages/ep/site/cincodias.elpais.com/portada",
+      "perWeek": 30,
+      "site": "https://cincodias.elpais.com/",
+      "icon": "catalog-icons/cinco-dias-economia.png"
+    },
+    {
+      "name": "Bloomberg Línea",
+      "cat": "economia",
+      "desc": "Negocios en Latinoamérica",
+      "feed": "https://www.bloomberglinea.com/arc/outboundfeeds/rss.xml",
+      "perWeek": 123,
+      "site": "https://www.bloomberglinea.com/",
+      "icon": "catalog-icons/bloomberg-linea-economia.png"
+    },
+    {
+      "name": "El Financiero",
+      "cat": "economia",
+      "desc": "Economía y negocios de México",
+      "feed": "https://www.elfinanciero.com.mx/arc/outboundfeeds/rss/?outputType=xml",
+      "perWeek": 332,
+      "site": "https://www.elfinanciero.com.mx/",
+      "icon": "catalog-icons/el-financiero-economia.png"
+    },
+    {
+      "name": "Rankia",
+      "cat": "economia",
+      "desc": "Finanzas personales e inversión",
+      "feed": "https://www.rankia.com/titulares/feed.rss",
+      "perWeek": 142,
+      "site": "https://www.rankia.com/titulares",
+      "icon": "catalog-icons/rankia-economia.png"
+    },
+    {
+      "name": "Xataka IA",
+      "cat": "ia",
+      "desc": "Inteligencia artificial en español",
+      "top": true,
+      "feed": "https://www.xataka.com/tag/inteligencia-artificial/rss2.xml",
+      "perWeek": 24,
+      "site": "https://www.xataka.com/",
+      "icon": "catalog-icons/xataka-ia-ia.png"
+    },
+    {
+      "name": "MIT Technology Review",
+      "cat": "ia",
+      "desc": "Tecnología emergente",
+      "lang": "en",
+      "top": true,
+      "feed": "https://www.technologyreview.com/feed",
+      "perWeek": 22,
+      "site": "https://www.technologyreview.com/",
+      "icon": "catalog-icons/mit-technology-review-ia.png"
+    },
+    {
+      "name": "Simon Willison",
+      "cat": "ia",
+      "desc": "Notas prácticas sobre modelos de lenguaje",
+      "lang": "en",
+      "top": true,
+      "feed": "https://simonwillison.net/atom/everything/",
+      "perWeek": 19,
+      "site": "http://simonwillison.net/"
+    },
+    {
+      "name": "Hugging Face",
+      "cat": "ia",
+      "desc": "Modelos abiertos y herramientas",
+      "lang": "en",
+      "feed": "https://huggingface.co/blog/feed.xml",
+      "perWeek": 3,
+      "site": "https://huggingface.co/blog",
+      "icon": "catalog-icons/hugging-face-ia.png"
+    },
+    {
+      "name": "Google AI",
+      "cat": "ia",
+      "desc": "Novedades de IA de Google",
+      "lang": "en",
+      "feed": "https://blog.google/innovation-and-ai/technology/ai/rss/",
+      "perWeek": 4,
+      "site": "https://blog.google/innovation-and-ai/technology/ai/",
+      "icon": "catalog-icons/google-ai-ia.png"
+    },
+    {
+      "name": "OpenAI",
+      "cat": "ia",
+      "desc": "Anuncios de OpenAI",
+      "lang": "en",
+      "feed": "https://openai.com/news/rss.xml",
+      "perWeek": 2,
+      "site": "https://openai.com/news",
+      "icon": "catalog-icons/openai-ia.png"
+    },
+    {
+      "name": "The Decoder",
+      "cat": "ia",
+      "desc": "Actualidad de IA",
+      "lang": "en",
+      "feed": "https://the-decoder.com/feed/",
+      "perWeek": 52,
+      "site": "https://the-decoder.com/",
+      "icon": "catalog-icons/the-decoder-ia.png"
+    },
+    {
+      "name": "Hacker News",
+      "cat": "desarrollo",
+      "desc": "Lo que comenta la comunidad",
+      "lang": "en",
+      "top": true,
+      "feed": "https://news.ycombinator.com/rss",
+      "perWeek": 50,
+      "site": "https://news.ycombinator.com/",
+      "icon": "catalog-icons/hacker-news-desarrollo.png"
+    },
+    {
+      "name": "GitHub Blog",
+      "cat": "desarrollo",
+      "desc": "Novedades de GitHub",
+      "lang": "en",
+      "top": true,
+      "feed": "https://github.blog/feed/",
+      "perWeek": 8,
+      "site": "https://github.blog/",
+      "icon": "catalog-icons/github-blog-desarrollo.png"
+    },
+    {
+      "name": "Android Developers",
+      "cat": "desarrollo",
+      "desc": "Novedades para desarrollo Android",
+      "lang": "en",
+      "top": true,
+      "feed": "https://android-developers.googleblog.com/feeds/posts/default",
+      "perWeek": 3,
+      "site": "https://android-developers.googleblog.com/",
+      "icon": "catalog-icons/android-developers-desarrollo.png"
+    },
+    {
+      "name": "Rust Blog",
+      "cat": "desarrollo",
+      "desc": "Anuncios del lenguaje Rust",
+      "lang": "en",
+      "feed": "https://blog.rust-lang.org/feed.xml",
+      "perWeek": 2,
+      "site": "https://blog.rust-lang.org/",
+      "icon": "catalog-icons/rust-blog-desarrollo.png"
+    },
+    {
+      "name": "Godot Engine",
+      "cat": "desarrollo",
+      "desc": "Novedades del motor Godot",
+      "lang": "en",
+      "feed": "https://godotengine.org/rss.xml",
+      "perWeek": 1,
+      "site": "https://godotengine.org",
+      "icon": "catalog-icons/godot-engine-desarrollo.png"
+    },
+    {
+      "name": "Tauri",
+      "cat": "desarrollo",
+      "desc": "Novedades de Tauri",
+      "lang": "en",
+      "feed": "https://v2.tauri.app/blog/rss.xml",
+      "perWeek": 1,
+      "site": "https://v2.tauri.app/",
+      "icon": "catalog-icons/tauri-desarrollo.png"
+    },
+    {
+      "name": "CSS-Tricks",
+      "cat": "desarrollo",
+      "desc": "Técnicas de frontend",
+      "lang": "en",
+      "feed": "https://css-tricks.com/feed/",
+      "perWeek": 4,
+      "site": "https://css-tricks.com/",
+      "icon": "catalog-icons/css-tricks-desarrollo.png"
+    },
+    {
+      "name": "Smashing Magazine",
+      "cat": "desarrollo",
+      "desc": "Diseño y desarrollo web",
+      "lang": "en",
+      "feed": "https://www.smashingmagazine.com/feed/",
+      "perWeek": 2,
+      "site": "https://www.smashingmagazine.com/",
+      "icon": "catalog-icons/smashing-magazine-desarrollo.png"
+    },
+    {
+      "name": "Naukas",
+      "cat": "ciencia",
+      "desc": "Divulgación científica",
+      "top": true,
+      "feed": "http://feeds.feedburner.com/naukas",
+      "perWeek": 1,
+      "site": "https://naukas.com/",
+      "icon": "catalog-icons/naukas-ciencia.png"
+    },
+    {
+      "name": "Muy Interesante",
+      "cat": "ciencia",
+      "desc": "Ciencia, historia y curiosidades",
+      "feed": "https://muyinteresante.okdiario.com/feed/",
+      "perWeek": 44,
+      "top": true,
+      "site": "https://muyinteresante.okdiario.com/",
+      "icon": "catalog-icons/muy-interesante-ciencia.png"
+    },
+    {
+      "name": "National Geographic",
+      "cat": "ciencia",
+      "desc": "Naturaleza, ciencia e historia",
+      "feed": "https://www.nationalgeographic.com.es/feeds/rss",
+      "perWeek": 57,
+      "top": true,
+      "site": "https://www.nationalgeographic.com.es/",
+      "icon": "catalog-icons/national-geographic-ciencia.png"
+    },
+    {
+      "name": "NASA",
+      "cat": "ciencia",
+      "desc": "Misiones y descubrimientos",
+      "lang": "en",
+      "feed": "https://www.nasa.gov/feed/",
+      "perWeek": 27,
+      "site": "https://www.nasa.gov/",
+      "icon": "catalog-icons/nasa-ciencia.png"
+    },
+    {
+      "name": "Marca",
+      "cat": "deportes",
+      "desc": "Actualidad deportiva",
+      "top": true,
+      "feed": "https://e00-xlk-ue-marca.uecdn.es/rss/googlenews/portada.xml",
+      "perWeek": 1,
+      "site": "https://www.marca.com/",
+      "icon": "catalog-icons/marca-deportes.png"
+    },
+    {
+      "name": "AS",
+      "cat": "deportes",
+      "desc": "Actualidad deportiva",
+      "top": true,
+      "feed": "https://feeds.as.com/mrss-s/pages/as/site/as.com/portada",
+      "perWeek": 6,
+      "site": "https://as.com/",
+      "icon": "catalog-icons/as-deportes.png"
+    },
+    {
+      "name": "Mundo Deportivo",
+      "cat": "deportes",
+      "desc": "Actualidad deportiva",
+      "top": true,
+      "feed": "https://www.mundodeportivo.com/rss/home.xml",
+      "perWeek": 2,
+      "site": "https://www.mundodeportivo.com/",
+      "icon": "catalog-icons/mundo-deportivo-deportes.png"
+    },
+    {
+      "name": "ESPN Deportes",
+      "cat": "deportes",
+      "desc": "Deporte internacional",
+      "feed": "https://espndeportes.espn.com/espn/rss/news",
+      "perWeek": 117,
+      "site": "https://espndeportes.espn.com/",
+      "icon": "catalog-icons/espn-deportes-deportes.png"
+    },
+    {
+      "name": "Olé",
+      "cat": "deportes",
+      "desc": "Deporte argentino",
+      "feed": "https://www.ole.com.ar/rss/ultimas-noticias/",
+      "perWeek": 70,
+      "site": "https://www.ole.com.ar/ultimas-noticias",
+      "icon": "catalog-icons/ole-deportes.png"
+    },
+    {
+      "name": "Espinof",
+      "cat": "cultura",
+      "desc": "Cine y series",
+      "top": true,
+      "feed": "https://www.espinof.com/feedburner.xml",
+      "perWeek": 65,
+      "site": "https://www.espinof.com/",
+      "icon": "catalog-icons/espinof-cultura.png"
+    },
+    {
+      "name": "Jot Down",
+      "cat": "cultura",
+      "desc": "Cultura contemporánea",
+      "top": true,
+      "feed": "https://www.jotdown.es/feed/",
+      "perWeek": 20,
+      "site": "https://www.jotdown.es/",
+      "icon": "catalog-icons/jot-down-cultura.png"
+    },
+    {
+      "name": "SensaCine",
+      "cat": "cultura",
+      "desc": "Estrenos y noticias de cine",
+      "top": true,
+      "feed": "https://www.sensacine.com/rss/noticias.xml",
+      "perWeek": 112,
+      "site": "https://www.sensacine.com/",
+      "icon": "catalog-icons/sensacine-cultura.png"
+    },
+    {
+      "name": "Fotogramas",
+      "cat": "cultura",
+      "desc": "Cine y series",
+      "feed": "https://www.fotogramas.es/rss/default.xml",
+      "perWeek": 48,
+      "site": "https://www.fotogramas.es/",
+      "icon": "catalog-icons/fotogramas-cultura.png"
+    },
+    {
+      "name": "Yorokobu",
+      "cat": "cultura",
+      "desc": "Creatividad y tendencias",
+      "feed": "https://yorokobu.es/feed/",
+      "perWeek": 4,
+      "site": "https://yorokobu.es/",
+      "icon": "catalog-icons/yorokobu-cultura.png"
+    },
+    {
+      "name": "Expansión México",
+      "cat": "nacionales",
+      "desc": "Economía y actualidad",
+      "country": "mx",
+      "feed": "https://expansion.mx/rss",
+      "perWeek": 110,
+      "top": true,
+      "site": "https://expansion.mx/",
+      "icon": "catalog-icons/expansion-mexico-mx.png"
+    },
+    {
+      "name": "López-Dóriga Digital",
+      "cat": "nacionales",
+      "desc": "Actualidad al minuto",
+      "country": "mx",
+      "feed": "https://lopezdoriga.com/feed/",
+      "perWeek": 140,
+      "site": "https://lopezdoriga.com/",
+      "icon": "catalog-icons/lopez-doriga-digital-mx.png"
+    },
+    {
+      "name": "El Colombiano",
+      "cat": "nacionales",
+      "desc": "Diario generalista",
+      "country": "co",
+      "feed": "https://www.elcolombiano.com/rss/inicio.xml",
+      "perWeek": 1,
+      "site": "https://www.elcolombiano.com/",
+      "icon": "catalog-icons/el-colombiano-co.png"
+    },
+    {
+      "name": "Perfil",
+      "cat": "nacionales",
+      "desc": "Actualidad y análisis",
+      "country": "ar",
+      "feed": "https://www.perfil.com/feed",
+      "perWeek": 350,
+      "site": "https://www.perfil.com/",
+      "icon": "catalog-icons/perfil-ar.png"
+    },
+    {
+      "name": "El Cronista",
+      "cat": "nacionales",
+      "desc": "Economía y política",
+      "country": "ar",
+      "feed": "https://www.cronista.com/arc/outboundfeeds/news/",
+      "perWeek": 130,
+      "site": "https://www.cronista.com/",
+      "icon": "catalog-icons/el-cronista-ar.png"
+    },
+    {
+      "name": "The Clinic",
+      "cat": "nacionales",
+      "desc": "Actualidad con mirada propia",
+      "country": "cl",
+      "feed": "https://www.theclinic.cl/feed/",
+      "perWeek": 70,
+      "site": "https://www.theclinic.cl/",
+      "icon": "catalog-icons/the-clinic-cl.png"
+    },
+    {
+      "name": "ADN Radio",
+      "cat": "nacionales",
+      "desc": "Radio y actualidad",
+      "country": "cl",
+      "feed": "https://www.adnradio.cl/arc/outboundfeeds/rss/?outputType=xml",
+      "perWeek": 116,
+      "site": "https://www.adnradio.cl/",
+      "icon": "catalog-icons/adn-radio-cl.png"
+    },
+    {
+      "name": "Infobae Perú",
+      "cat": "nacionales",
+      "desc": "Actualidad al minuto",
+      "country": "pe",
+      "feed": "https://www.infobae.com/arc/outboundfeeds/rss/category/peru/",
+      "perWeek": 700,
+      "site": "https://www.infobae.com/",
+      "icon": "catalog-icons/infobae-peru-pe.png"
+    },
+    {
+      "name": "Infobae México",
+      "cat": "nacionales",
+      "desc": "Actualidad al minuto",
+      "country": "mx",
+      "feed": "https://www.infobae.com/arc/outboundfeeds/rss/category/mexico/",
+      "perWeek": 700,
+      "site": "https://www.infobae.com/",
+      "icon": "catalog-icons/infobae-mexico-mx.png"
+    },
+    {
+      "name": "Europa Press",
+      "cat": "nacionales",
+      "desc": "Agencia de noticias",
+      "country": "es",
+      "feed": "https://www.europapress.es/rss/rss.aspx",
+      "perWeek": 27,
+      "site": "https://www.europapress.es/",
+      "icon": "catalog-icons/europa-press-es.png"
+    },
+    {
+      "name": "Relevo",
+      "cat": "deportes",
+      "desc": "Deporte con otra mirada",
+      "feed": "https://www.relevo.com/feed/",
+      "perWeek": 42,
+      "site": "https://www.relevo.com/",
+      "icon": "catalog-icons/relevo-deportes.png"
+    },
+    {
+      "name": "Areajugones",
+      "cat": "gaming",
+      "desc": "Videojuegos y esports",
+      "feed": "https://areajugones.sport.es/feed/",
+      "perWeek": 112,
+      "site": "https://areajugones.sport.es/",
+      "icon": "catalog-icons/areajugones-gaming.png"
+    },
+    {
+      "name": "Milenio",
+      "cat": "nacionales",
+      "desc": "Diario generalista",
+      "country": "mx",
+      "feed": "https://www.milenio.com/",
+      "kind": "page",
+      "site": "https://www.milenio.com",
+      "icon": "catalog-icons/milenio-mx.png"
+    },
+    {
+      "name": "Animal Político",
+      "cat": "nacionales",
+      "desc": "Periodismo de investigación",
+      "country": "mx",
+      "feed": "https://grupoanimal.mx/noticias",
+      "kind": "page",
+      "site": "https://grupoanimal.mx",
+      "icon": "catalog-icons/animal-politico-mx.png"
+    },
+    {
+      "name": "Aristegui Noticias",
+      "cat": "nacionales",
+      "desc": "Actualidad y análisis",
+      "country": "mx",
+      "feed": "https://aristeguinoticias.com/",
+      "kind": "page",
+      "site": "https://aristeguinoticias.com",
+      "icon": "catalog-icons/aristegui-noticias-mx.png"
+    },
+    {
+      "name": "Excélsior",
+      "cat": "nacionales",
+      "desc": "Diario generalista",
+      "country": "mx",
+      "feed": "https://www.excelsior.com.mx/rss",
+      "site": "https://www.excelsior.com.mx/",
+      "perWeek": 2
+    },
+    {
+      "name": "RTVE Noticias",
+      "cat": "nacionales",
+      "desc": "Radiotelevisión pública",
+      "country": "es",
+      "feed": "https://www.rtve.es/noticias/",
+      "kind": "page",
+      "site": "https://www.rtve.es"
+    },
+    {
+      "name": "El Espectador",
+      "cat": "nacionales",
+      "desc": "Diario generalista",
+      "country": "co",
+      "feed": "https://www.elespectador.com/arc/outboundfeeds/discover/",
+      "site": "https://www.elespectador.com/",
+      "icon": "catalog-icons/el-espectador-co.png",
+      "perWeek": 140
+    },
+    {
+      "name": "El Mostrador",
+      "cat": "nacionales",
+      "desc": "Política y actualidad",
+      "country": "cl",
+      "feed": "https://www.elmostrador.cl/",
+      "kind": "page",
+      "site": "https://www.elmostrador.cl",
+      "icon": "catalog-icons/el-mostrador-cl.png"
+    },
+    {
+      "name": "CNN en Español",
+      "cat": "mundo",
+      "desc": "Actualidad internacional",
+      "feed": "https://cnnespanol.cnn.com/",
+      "kind": "page",
+      "site": "https://cnnespanol.cnn.com",
+      "icon": "catalog-icons/cnn-en-espanol-mundo.png"
+    },
+    {
+      "name": "Agencia SINC",
+      "cat": "ciencia",
+      "desc": "Noticias de ciencia",
+      "feed": "https://www.agenciasinc.es/",
+      "kind": "page",
+      "site": "https://www.agenciasinc.es",
+      "icon": "catalog-icons/agencia-sinc-ciencia.png"
+    },
+    {
+      "name": "El Universo",
+      "cat": "nacionales",
+      "desc": "Diario generalista",
+      "country": "ec",
+      "feed": "https://www.eluniverso.com/arc/outboundfeeds/rss/?outputType=xml",
+      "site": "https://eluniverso.com/",
+      "icon": "catalog-icons/el-universo-ec.png",
+      "perWeek": 118,
+      "top": true
+    },
+    {
+      "name": "El Comercio",
+      "cat": "nacionales",
+      "desc": "Diario generalista",
+      "country": "ec",
+      "feed": "https://www.elcomercio.com/feed/",
+      "site": "https://www.elcomercio.com/",
+      "icon": "catalog-icons/el-comercio-ec.png",
+      "perWeek": 140,
+      "top": true
+    },
+    {
+      "name": "Primicias",
+      "cat": "nacionales",
+      "desc": "Actualidad y análisis",
+      "country": "ec",
+      "feed": "https://www.primicias.ec/",
+      "kind": "page",
+      "site": "https://www.primicias.ec",
+      "icon": "catalog-icons/primicias-ec.png",
+      "top": true
+    },
+    {
+      "name": "Expreso",
+      "cat": "nacionales",
+      "desc": "Diario generalista",
+      "country": "ec",
+      "feed": "https://www.expreso.ec/rss/home.xml",
+      "site": "https://www.expreso.ec/",
+      "icon": "catalog-icons/expreso-ec.png",
+      "perWeek": 8
+    },
+    {
+      "name": "El Nacional",
+      "cat": "nacionales",
+      "desc": "Diario generalista",
+      "country": "ve",
+      "feed": "https://www.elnacional.com/feed/",
+      "site": "https://bitlysdowssl-aws.com/",
+      "icon": "catalog-icons/el-nacional-ve.png",
+      "perWeek": 376,
+      "top": true
+    },
+    {
+      "name": "Efecto Cocuyo",
+      "cat": "nacionales",
+      "desc": "Periodismo independiente",
+      "country": "ve",
+      "feed": "https://efectococuyo.com/feed/",
+      "site": "https://efectococuyo.com/",
+      "perWeek": 70,
+      "top": true,
+      "icon": "catalog-icons/efecto-cocuyo-ve.png"
+    },
+    {
+      "name": "El Pitazo",
+      "cat": "nacionales",
+      "desc": "Actualidad al minuto",
+      "country": "ve",
+      "feed": "https://elpitazo.net/feed/",
+      "site": "https://elpitazo.net/",
+      "icon": "catalog-icons/el-pitazo-ve.png",
+      "perWeek": 70,
+      "top": true
+    },
+    {
+      "name": "Runrun.es",
+      "cat": "nacionales",
+      "desc": "Investigación y actualidad",
+      "country": "ve",
+      "feed": "https://runrun.es/feed/",
+      "site": "https://runrun.es/",
+      "icon": "catalog-icons/runrun-es-ve.png",
+      "perWeek": 54
+    },
+    {
+      "name": "El País",
+      "cat": "nacionales",
+      "desc": "Diario generalista",
+      "country": "uy",
+      "feed": "https://www.elpais.com.uy/",
+      "kind": "page",
+      "site": "https://www.elpais.com.uy",
+      "top": true,
+      "icon": "catalog-icons/el-pais-uy.png"
+    },
+    {
+      "name": "El Observador",
+      "cat": "nacionales",
+      "desc": "Diario generalista",
+      "country": "uy",
+      "feed": "https://www.elobservador.com.uy/",
+      "kind": "page",
+      "site": "https://www.elobservador.com.uy",
+      "icon": "catalog-icons/el-observador-uy.png",
+      "top": true
+    },
+    {
+      "name": "Montevideo Portal",
+      "cat": "nacionales",
+      "desc": "Actualidad al minuto",
+      "country": "uy",
+      "feed": "https://www.montevideo.com.uy/",
+      "kind": "page",
+      "site": "https://www.montevideo.com.uy",
+      "icon": "catalog-icons/montevideo-portal-uy.png",
+      "top": true
+    },
+    {
+      "name": "la diaria",
+      "cat": "nacionales",
+      "desc": "Periodismo independiente",
+      "country": "uy",
+      "feed": "https://ladiaria.com.uy/feeds/articulos/",
+      "site": "https://ladiaria.com.uy/",
+      "perWeek": 1,
+      "icon": "catalog-icons/la-diaria-uy.png"
+    },
+    {
+      "name": "La Nación",
+      "cat": "nacionales",
+      "desc": "Diario generalista",
+      "country": "cr",
+      "feed": "https://www.nacion.com/arc/outboundfeeds/rss/?outputType=xml",
+      "site": "https://www.nacion.com/",
+      "perWeek": 646,
+      "top": true
+    },
+    {
+      "name": "CRHoy",
+      "cat": "nacionales",
+      "desc": "Actualidad al minuto",
+      "country": "cr",
+      "feed": "https://crhoy.com/",
+      "kind": "page",
+      "site": "https://crhoy.com",
+      "icon": "catalog-icons/crhoy-cr.png",
+      "top": true
+    },
+    {
+      "name": "Delfino.cr",
+      "cat": "nacionales",
+      "desc": "Política y análisis",
+      "country": "cr",
+      "feed": "https://delfino.cr/feed",
+      "site": "https://delfino.cr/",
+      "icon": "catalog-icons/delfino-cr-cr.png",
+      "perWeek": 145,
+      "top": true
+    },
+    {
+      "name": "Semanario Universidad",
+      "cat": "nacionales",
+      "desc": "Periodismo universitario",
+      "country": "cr",
+      "feed": "https://semanariouniversidad.com/feed/",
+      "site": "https://semanariouniversidad.com/",
+      "icon": "catalog-icons/semanario-universidad-cr.png",
+      "perWeek": 38
+    },
+    {
+      "name": "Teletica",
+      "cat": "nacionales",
+      "desc": "Televisión y actualidad",
+      "country": "cr",
+      "feed": "https://www.teletica.com/",
+      "kind": "page",
+      "site": "https://www.teletica.com"
+    },
+    {
+      "name": "The New York Times",
+      "cat": "nacionales",
+      "desc": "Edición en español",
+      "country": "us",
+      "feed": "https://rss.nytimes.com/services/xml/rss/nyt/es.xml",
+      "site": "https://www.nytimes.com/es/",
+      "perWeek": 88,
+      "top": true,
+      "icon": "catalog-icons/the-new-york-times-us.png"
+    },
+    {
+      "name": "Univision Noticias",
+      "cat": "nacionales",
+      "desc": "Actualidad para hispanos",
+      "country": "us",
+      "feed": "https://www.univision.com/noticias",
+      "kind": "page",
+      "site": "https://www.univision.com",
+      "icon": "catalog-icons/univision-noticias-us.png",
+      "top": true
+    },
+    {
+      "name": "Telemundo",
+      "cat": "nacionales",
+      "desc": "Actualidad para hispanos",
+      "country": "us",
+      "feed": "https://www.telemundo.com/noticias",
+      "kind": "page",
+      "site": "https://www.telemundo.com",
+      "icon": "catalog-icons/telemundo-us.png",
+      "top": true
+    },
+    {
+      "name": "La Opinión",
+      "cat": "nacionales",
+      "desc": "Diario en español de Los Ángeles",
+      "country": "us",
+      "feed": "https://laopinion.com/feed/",
+      "site": "https://laopinion.com/",
+      "icon": "catalog-icons/la-opinion-us.png",
+      "perWeek": 350
+    },
+    {
+      "name": "El Nuevo Herald",
+      "cat": "nacionales",
+      "desc": "Diario en español de Miami",
+      "country": "us",
+      "feed": "https://feeds.mcclatchy.com/elnuevoherald/stories",
+      "site": "https://www.elnuevoherald.com/",
+      "perWeek": 44,
+      "icon": "catalog-icons/el-nuevo-herald-us.png"
+    },
+    {
+      "name": "CuídatePlus",
+      "cat": "salud",
+      "desc": "Salud y bienestar",
+      "feed": "https://cuidateplus.marca.com/feed",
+      "site": "https://cuidateplus.marca.com/",
+      "icon": "catalog-icons/cuidateplus-salud.png",
+      "perWeek": 30,
+      "top": true
+    },
+    {
+      "name": "Infosalus",
+      "cat": "salud",
+      "desc": "Noticias de salud",
+      "feed": "https://www.infosalus.com/",
+      "kind": "page",
+      "site": "https://www.infosalus.com",
+      "icon": "catalog-icons/infosalus-salud.png",
+      "top": true
+    },
+    {
+      "name": "Salud con lupa",
+      "cat": "salud",
+      "desc": "Periodismo de salud pública",
+      "feed": "https://saludconlupa.com/feed/latest.xml",
+      "site": "https://saludconlupa.com/",
+      "icon": "catalog-icons/salud-con-lupa-salud.png",
+      "perWeek": 1,
+      "top": true
+    },
+    {
+      "name": "Redacción Médica",
+      "cat": "salud",
+      "desc": "Sanidad y medicina",
+      "feed": "https://www.redaccionmedica.com/rss/",
+      "site": "https://www.redaccionmedica.com/",
+      "icon": "catalog-icons/redaccion-medica-salud.png",
+      "perWeek": 52
+    },
+    {
+      "name": "Vitónica",
+      "cat": "salud",
+      "desc": "Ejercicio y nutrición",
+      "feed": "https://www.vitonica.com/feedburner.xml",
+      "site": "https://www.vitonica.com/",
+      "icon": "catalog-icons/vitonica-salud.png",
+      "perWeek": 1
+    },
+    {
+      "name": "Motorpasión",
+      "cat": "motor",
+      "desc": "Coches y actualidad del motor",
+      "feed": "https://www.motorpasion.com/feedburner.xml",
+      "site": "https://www.motorpasion.com/",
+      "icon": "catalog-icons/motorpasion-motor.png",
+      "perWeek": 67,
+      "top": true
+    },
+    {
+      "name": "Diariomotor",
+      "cat": "motor",
+      "desc": "Pruebas y novedades",
+      "feed": "https://www.diariomotor.com/feed/",
+      "site": "https://www.diariomotor.com/",
+      "icon": "catalog-icons/diariomotor-motor.png",
+      "perWeek": 140,
+      "top": true
+    },
+    {
+      "name": "Autobild",
+      "cat": "motor",
+      "desc": "Coches y pruebas",
+      "feed": "https://www.autobild.es/rss/",
+      "site": "https://www.autobild.es/",
+      "icon": "catalog-icons/autobild-motor.png",
+      "perWeek": 1,
+      "top": true
+    },
+    {
+      "name": "Híbridos y Eléctricos",
+      "cat": "motor",
+      "desc": "Movilidad eléctrica",
+      "feed": "https://www.hibridosyelectricos.com/uploads/feeds/feed_hibridos-y-electricos_es.xml",
+      "site": "https://www.hibridosyelectricos.com/uploads/feeds/feed_hibridos-y-electricos_es.xml",
+      "perWeek": 105,
+      "icon": "catalog-icons/hibridos-y-electricos-motor.png"
+    },
+    {
+      "name": "Viajes National Geographic",
+      "cat": "viajes",
+      "desc": "Destinos y rutas",
+      "feed": "https://viajes.nationalgeographic.com.es/feeds/rss",
+      "site": "https://viajes.nationalgeographic.com.es/",
+      "perWeek": 47,
+      "top": true,
+      "icon": "catalog-icons/viajes-national-geographic-viajes.png"
+    },
+    {
+      "name": "Condé Nast Traveler",
+      "cat": "viajes",
+      "desc": "Viajes y escapadas",
+      "feed": "https://www.traveler.es/feed/rss",
+      "site": "https://www.traveler.es/",
+      "icon": "catalog-icons/conde-nast-traveler-viajes.png",
+      "perWeek": 35,
+      "top": true
+    },
+    {
+      "name": "Diario del Viajero",
+      "cat": "viajes",
+      "desc": "Ideas para viajar",
+      "feed": "https://www.diariodelviajero.com/feedburner.xml",
+      "site": "https://www.diariodelviajero.com/",
+      "icon": "catalog-icons/diario-del-viajero-viajes.png",
+      "perWeek": 1,
+      "top": true
+    },
+    {
+      "name": "El Viajero",
+      "cat": "viajes",
+      "desc": "Viajes de El País",
+      "feed": "https://feeds.elpais.com/mrss-s/list/ep/site/elpais.com/section/elviajero",
+      "site": "https://elpais.com/",
+      "perWeek": 10,
+      "icon": "catalog-icons/el-viajero-viajes.png"
+    },
+    {
+      "name": "Jenesaispop",
+      "cat": "musica",
+      "desc": "Pop e indie",
+      "feed": "https://jenesaispop.com/feed/",
+      "site": "https://jenesaispop.com/",
+      "icon": "catalog-icons/jenesaispop-musica.png",
+      "perWeek": 63,
+      "top": true
+    },
+    {
+      "name": "Mondo Sonoro",
+      "cat": "musica",
+      "desc": "Música independiente",
+      "feed": "https://www.mondosonoro.com/feed/",
+      "site": "https://www.mondosonoro.com/",
+      "icon": "catalog-icons/mondo-sonoro-musica.png",
+      "perWeek": 35,
+      "top": true
+    },
+    {
+      "name": "Indie Hoy",
+      "cat": "musica",
+      "desc": "Música y cultura alternativa",
+      "feed": "https://indiehoy.com/feed/",
+      "site": "https://indiehoy.com/",
+      "icon": "catalog-icons/indie-hoy-musica.png",
+      "perWeek": 91,
+      "top": true
+    },
+    {
+      "name": "Rolling Stone",
+      "cat": "musica",
+      "desc": "Música y cultura",
+      "feed": "https://es.rollingstone.com/feed/",
+      "site": "https://es.rollingstone.com/",
+      "icon": "catalog-icons/rolling-stone-musica.png",
+      "perWeek": 46
+    },
+    {
+      "name": "Los40",
+      "cat": "musica",
+      "desc": "Actualidad musical",
+      "feed": "https://los40.com/",
+      "kind": "page",
+      "site": "https://los40.com",
+      "icon": "catalog-icons/los40-musica.png"
+    },
+    {
+      "name": "midudev",
+      "cat": "video",
+      "desc": "Programación web en español",
+      "feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UC8LeXCWOalN8SxlrPcG-PaQ",
+      "site": "https://www.youtube.com/channel/UC8LeXCWOalN8SxlrPcG-PaQ",
+      "icon": "catalog-icons/midudev-video.png",
+      "top": true,
+      "perWeek": 10
+    },
+    {
+      "name": "QuantumFracture",
+      "cat": "video",
+      "desc": "Física y ciencia",
+      "feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCbdSYaPD-lr1kW27UJuk8Pw",
+      "site": "https://www.youtube.com/channel/UCbdSYaPD-lr1kW27UJuk8Pw",
+      "icon": "catalog-icons/quantumfracture-video.png",
+      "top": true,
+      "perWeek": 5
+    },
+    {
+      "name": "VisualPolitik",
+      "cat": "video",
+      "desc": "Política y economía internacional",
+      "feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCJQQVLyM6wtPleV4wFBK06g",
+      "site": "https://www.youtube.com/channel/UCJQQVLyM6wtPleV4wFBK06g",
+      "icon": "catalog-icons/visualpolitik-video.png",
+      "perWeek": 5,
+      "top": true
+    },
+    {
+      "name": "Date un Vlog",
+      "cat": "video",
+      "desc": "Ciencia y física",
+      "feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCQX_MZRCaluNKxkywkLEgfA",
+      "site": "https://www.youtube.com/channel/UCQX_MZRCaluNKxkywkLEgfA",
+      "icon": "catalog-icons/date-un-vlog-video.png",
+      "perWeek": 5
+    },
+    {
+      "name": "DW Español",
+      "cat": "video",
+      "desc": "Actualidad internacional",
+      "feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCT4Jg8h03dD0iN3Pb5L0PMA",
+      "site": "https://www.youtube.com/channel/UCT4Jg8h03dD0iN3Pb5L0PMA",
+      "icon": "catalog-icons/dw-espanol-video.png",
+      "perWeek": 90
+    },
+    {
+      "name": "BBC News Mundo",
+      "cat": "video",
+      "desc": "Reportajes y actualidad",
+      "feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCUBIrDsIVzRpKsClMlSlTpQ",
+      "site": "https://www.youtube.com/channel/UCUBIrDsIVzRpKsClMlSlTpQ",
+      "icon": "catalog-icons/bbc-news-mundo-video.png",
+      "perWeek": 25
+    },
+    {
+      "name": "Hola Mundo",
+      "cat": "video",
+      "desc": "Programación desde cero",
+      "feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UC4FHiPgS1KXkUMx3dxBUtPg",
+      "site": "https://www.youtube.com/channel/UC4FHiPgS1KXkUMx3dxBUtPg",
+      "icon": "catalog-icons/hola-mundo-video.png",
+      "perWeek": 5
+    },
+    {
+      "name": "Fireship",
+      "cat": "video",
+      "desc": "Programación en píldoras",
+      "lang": "en",
+      "feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCsBjURrPoezykLs9EqgamOA",
+      "site": "https://www.youtube.com/channel/UCsBjURrPoezykLs9EqgamOA",
+      "icon": "catalog-icons/fireship-video.png",
+      "perWeek": 3
+    },
+    {
+      "name": "Veritasium",
+      "cat": "video",
+      "desc": "Ciencia e ingeniería",
+      "lang": "en",
+      "feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCHnyfMqiRRG1u-2MsSQLbXA",
+      "site": "https://www.youtube.com/channel/UCHnyfMqiRRG1u-2MsSQLbXA",
+      "icon": "catalog-icons/veritasium-video.png",
+      "perWeek": 2
+    },
+    {
+      "name": "Kurzgesagt",
+      "cat": "video",
+      "desc": "Ciencia animada",
+      "lang": "en",
+      "feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCsXVk37bltHxD1rDPwtNM8Q",
+      "site": "https://www.youtube.com/channel/UCsXVk37bltHxD1rDPwtNM8Q",
+      "icon": "catalog-icons/kurzgesagt-video.png",
+      "perWeek": 2
+    },
+    {
+      "name": "Marques Brownlee",
+      "cat": "video",
+      "desc": "Análisis de tecnología",
+      "lang": "en",
+      "feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCBJycsmduvYEL83R_U4JriQ",
+      "site": "https://www.youtube.com/channel/UCBJycsmduvYEL83R_U4JriQ",
+      "icon": "catalog-icons/marques-brownlee-video.png",
+      "perWeek": 2
+    },
+    {
+      "name": "El Hilo",
+      "cat": "podcasts",
+      "desc": "La noticia de la semana en Latinoamérica",
+      "feed": "https://elhilo.audio/feed/podcast/",
+      "site": "https://elhilo.audio/",
+      "icon": "catalog-icons/el-hilo-podcasts.png",
+      "perWeek": 1,
+      "top": true
+    },
+    {
+      "name": "The Daily",
+      "cat": "podcasts",
+      "desc": "La noticia del día, del New York Times",
+      "lang": "en",
+      "feed": "https://feeds.simplecast.com/54nAGcIl",
+      "site": "https://www.nytimes.com/the-daily",
+      "perWeek": 6,
+      "icon": "catalog-icons/the-daily-podcasts.png"
+    },
+    {
+      "name": "Hard Fork",
+      "cat": "podcasts",
+      "desc": "Tecnología, del New York Times",
+      "lang": "en",
+      "feed": "https://feeds.simplecast.com/l2i9YnTd",
+      "site": "https://www.nytimes.com/column/hard-fork",
+      "perWeek": 1,
+      "icon": "catalog-icons/hard-fork-podcasts.png"
+    },
+    {
+      "name": "Darknet Diaries",
+      "cat": "podcasts",
+      "desc": "Historias de seguridad informática",
+      "lang": "en",
+      "feed": "https://podcast.darknetdiaries.com/",
+      "site": "https://darknetdiaries.com/",
+      "icon": "catalog-icons/darknet-diaries-podcasts.png",
+      "perWeek": 1
+    },
+    {
+      "name": "Lex Fridman Podcast",
+      "cat": "podcasts",
+      "desc": "Conversaciones largas sobre ciencia y tecnología",
+      "lang": "en",
+      "feed": "https://lexfridman.com/feed/podcast/",
+      "site": "https://lexfridman.com/",
+      "icon": "catalog-icons/lex-fridman-podcast-podcasts.png",
+      "perWeek": 1
+    },
+    {
+      "name": "Planet Money",
+      "cat": "podcasts",
+      "desc": "Economía contada con historias",
+      "lang": "en",
+      "feed": "https://feeds.npr.org/510289/podcast.xml",
+      "site": "https://www.npr.org/podcasts/510289/planet-money",
+      "icon": "catalog-icons/planet-money-podcasts.png",
+      "perWeek": 2
+    },
+    {
+      "name": "Zenda",
+      "cat": "libros",
+      "desc": "Literatura, autores y novedades",
+      "feed": "https://www.zendalibros.com/feed/",
+      "site": "https://www.zendalibros.com/",
+      "perWeek": 70,
+      "top": true
+    },
+    {
+      "name": "Babelia",
+      "cat": "libros",
+      "desc": "El suplemento cultural de El País",
+      "feed": "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/babelia/portada",
+      "site": "https://elpais.com/",
+      "icon": "catalog-icons/babelia-libros.png",
+      "perWeek": 1,
+      "top": true
+    },
+    {
+      "name": "Actualidad Literatura",
+      "cat": "libros",
+      "desc": "Novedades editoriales y autores",
+      "feed": "https://www.actualidadliteratura.com/feed/",
+      "site": "https://www.actualidadliteratura.com/",
+      "icon": "catalog-icons/actualidad-literatura-libros.png",
+      "perWeek": 29,
+      "top": true
+    },
+    {
+      "name": "Librújula",
+      "cat": "libros",
+      "desc": "Revista de libros",
+      "feed": "https://librujula.publico.es/feed/",
+      "site": "https://librujula.publico.es/librujula-tu-revista-de-libros/",
+      "icon": "catalog-icons/librujula-libros.png",
+      "perWeek": 9
+    },
+    {
+      "name": "Revista de Libros",
+      "cat": "libros",
+      "desc": "Crítica y ensayo",
+      "feed": "https://www.revistadelibros.com/feed/",
+      "site": "https://www.revistadelibros.com/",
+      "icon": "catalog-icons/revista-de-libros-libros.png",
+      "perWeek": 1
+    },
+    {
+      "name": "El Cultural",
+      "cat": "libros",
+      "desc": "Letras en El Español",
+      "feed": "https://www.elespanol.com/rss/el-cultural/letras/",
+      "site": "https://www.elespanol.com/el-cultural/letras/",
+      "icon": "catalog-icons/el-cultural-libros.png",
+      "perWeek": 18
+    },
+    {
+      "name": "Un libro al día",
+      "cat": "libros",
+      "desc": "Una reseña cada día",
+      "feed": "https://unlibroaldia.blogspot.com/feeds/posts/default",
+      "site": "https://unlibroaldia.blogspot.com/",
+      "icon": "catalog-icons/un-libro-al-dia-libros.png",
+      "perWeek": 7
+    },
+    {
+      "name": "Trabalibros",
+      "cat": "libros",
+      "desc": "Recomendaciones de lectura",
+      "feed": "https://trabalibros.com/",
+      "kind": "page",
+      "site": "https://trabalibros.com",
+      "icon": "catalog-icons/trabalibros-libros.png"
+    },
+    {
+      "name": "El Placer de la Lectura",
+      "cat": "libros",
+      "desc": "Novedades y reseñas",
+      "feed": "https://elplacerdelalectura.com/feed",
+      "site": "https://elplacerdelalectura.com/",
+      "icon": "catalog-icons/el-placer-de-la-lectura-libros.png",
+      "perWeek": 70
+    },
+    {
+      "name": "Literary Hub",
+      "cat": "libros",
+      "desc": "Literatura y ensayo",
+      "lang": "en",
+      "feed": "https://lithub.com/feed/",
+      "site": "https://lithub.com/",
+      "perWeek": 67
+    },
+    {
+      "name": "Book Riot",
+      "cat": "libros",
+      "desc": "Recomendaciones y noticias de libros",
+      "lang": "en",
+      "feed": "https://bookriot.com/feed/",
+      "site": "https://bookriot.com/",
+      "icon": "catalog-icons/book-riot-libros.png",
+      "perWeek": 34
+    },
+    {
+      "name": "Kudasai",
+      "cat": "anime",
+      "desc": "Noticias de anime, manga y cultura japonesa",
+      "top": true,
+      "feed": "https://somoskudasai.com/noticias/feed/",
+      "site": "https://somoskudasai.com/",
+      "icon": "catalog-icons/kudasai-anime.png",
+      "perWeek": 63
+    },
+    {
+      "name": "Ramen Para Dos",
+      "cat": "anime",
+      "desc": "Anime, manga y licencias en español",
+      "top": true,
+      "feed": "https://ramenparados.com/feed/",
+      "site": "https://ramenparados.com/",
+      "icon": "catalog-icons/ramen-para-dos-anime.png",
+      "perWeek": 33
+    },
+    {
+      "name": "Crunchyroll Noticias",
+      "cat": "anime",
+      "desc": "Anuncios y estrenos de la plataforma",
+      "feed": "https://cr-news-api-service.prd.crunchyrollsvc.com/v1/es-ES/rss",
+      "site": "https://crunchyroll.com/es-es/news",
+      "icon": "catalog-icons/crunchyroll-noticias-anime.png",
+      "perWeek": 117
+    },
+    {
+      "name": "El Palomitrón",
+      "cat": "anime",
+      "desc": "Anime, series y cine con mirada crítica",
+      "feed": "https://elpalomitron.com/feed/",
+      "site": "https://elpalomitron.com/",
+      "icon": "catalog-icons/el-palomitron-anime.png",
+      "perWeek": 7
+    },
+    {
+      "name": "Zona Negativa",
+      "cat": "anime",
+      "desc": "Cómic americano, europeo y manga",
+      "feed": "https://www.zonanegativa.com/feed/",
+      "site": "https://www.zonanegativa.com/",
+      "icon": "catalog-icons/zona-negativa-anime.png",
+      "perWeek": 17
+    },
+    {
+      "name": "Tomos y Grapas",
+      "cat": "anime",
+      "desc": "Cómics, manga y novela gráfica",
+      "feed": "https://www.tomosygrapas.com/feed/",
+      "site": "https://www.tomosygrapas.com/",
+      "icon": "catalog-icons/tomos-y-grapas-anime.png",
+      "perWeek": 8
+    },
+    {
+      "name": "Anime News Network",
+      "cat": "anime",
+      "desc": "La referencia mundial de noticias de anime",
+      "lang": "en",
+      "feed": "https://www.animenewsnetwork.com/all/rss.xml?ann-edition=us",
+      "site": "https://www.animenewsnetwork.com/",
+      "perWeek": 2
+    },
+    {
+      "name": "MyAnimeList",
+      "cat": "anime",
+      "desc": "Noticias de la mayor base de datos de anime",
+      "lang": "en",
+      "feed": "https://myanimelist.net/rss/news.xml",
+      "site": "https://myanimelist.net/news?_location=rss",
+      "icon": "catalog-icons/myanimelist-anime.png",
+      "perWeek": 36
+    },
+    {
+      "name": "Anime Corner",
+      "cat": "anime",
+      "desc": "Temporadas, rankings y noticias",
+      "lang": "en",
+      "feed": "https://animecorner.me/feed/",
+      "site": "https://animecorner.me/",
+      "icon": "catalog-icons/anime-corner-anime.png",
+      "perWeek": 22
+    },
+    {
+      "name": "Cosmere.es",
+      "cat": "libros",
+      "desc": "Brandon Sanderson y el Cosmere en español",
+      "top": true,
+      "feed": "https://cosmere.es/",
+      "kind": "page",
+      "site": "https://cosmere.es",
+      "icon": "catalog-icons/cosmere-es-libros.png"
+    },
+    {
+      "name": "Ahora qué leo",
+      "cat": "libros",
+      "desc": "Libros, autores y recomendaciones, de laSexta",
+      "feed": "https://www.lasexta.com/ahoraqueleo/rss/4106279.xml",
+      "site": "https://www.lasexta.com/ahoraqueleo/",
+      "icon": "catalog-icons/ahora-que-leo-libros.png",
+      "perWeek": 1
+    },
+    {
+      "name": "Papel en Blanco",
+      "cat": "libros",
+      "desc": "Novedades y curiosidades literarias",
+      "feed": "https://papelenblanco.com/feed",
+      "site": "https://papelenblanco.com/?source=rss----db3428dffa25---4",
+      "perWeek": 4,
+      "icon": "catalog-icons/papel-en-blanco-libros.png"
+    },
+    {
+      "name": "Letras Libres",
+      "cat": "libros",
+      "desc": "Ensayo, crítica y literatura",
+      "feed": "https://letraslibres.com/feed/",
+      "site": "https://letraslibres.com/",
+      "icon": "catalog-icons/letras-libres-libros.png",
+      "perWeek": 95
+    },
+    {
+      "name": "La Piedra de Sísifo",
+      "cat": "libros",
+      "desc": "Gabinete de curiosidades literarias",
+      "feed": "https://lapiedradesisifo.com/feed/",
+      "site": "https://lapiedradesisifo.com/",
+      "icon": "catalog-icons/la-piedra-de-sisifo-libros.png",
+      "perWeek": 3
+    },
+    {
+      "name": "Reactor",
+      "cat": "libros",
+      "desc": "Ciencia ficción y fantasía (antes Tor.com)",
+      "lang": "en",
+      "feed": "https://reactormag.com/feed/",
+      "site": "https://reactormag.com/",
+      "perWeek": 27,
+      "icon": "catalog-icons/reactor-libros.png"
+    },
+    {
+      "name": "Listín Diario",
+      "cat": "nacionales",
+      "desc": "El decano de la prensa dominicana",
+      "top": true,
+      "country": "do",
+      "feed": "https://listindiario.com/",
+      "kind": "page",
+      "site": "https://listindiario.com",
+      "icon": "catalog-icons/listin-diario-do.png"
+    },
+    {
+      "name": "Diario Libre",
+      "cat": "nacionales",
+      "desc": "Actualidad dominicana al momento",
+      "top": true,
+      "country": "do",
+      "feed": "https://www.diariolibre.com/rss/portada.xml",
+      "site": "https://www.diariolibre.com/feed/portada.xml",
+      "icon": "catalog-icons/diario-libre-do.png",
+      "perWeek": 84
+    },
+    {
+      "name": "El Nacional",
+      "cat": "nacionales",
+      "desc": "Vespertino dominicano",
+      "country": "do",
+      "feed": "https://elnacional.com.do/rss/home.xml",
+      "site": "https://elnacional.com.do/",
+      "icon": "catalog-icons/el-nacional-do.png",
+      "perWeek": 75
+    },
+    {
+      "name": "Hoy",
+      "cat": "nacionales",
+      "desc": "Diario generalista dominicano",
+      "country": "do",
+      "feed": "https://hoy.com.do/rss/home.xml",
+      "site": "https://hoy.com.do/",
+      "icon": "catalog-icons/hoy-do.png",
+      "perWeek": 4
+    },
+    {
+      "name": "El Caribe",
+      "cat": "nacionales",
+      "desc": "Noticias y análisis del país",
+      "country": "do",
+      "feed": "https://www.elcaribe.com.do/",
+      "kind": "page",
+      "site": "https://www.elcaribe.com.do",
+      "icon": "catalog-icons/el-caribe-do.png"
+    },
+    {
+      "name": "El Día",
+      "cat": "nacionales",
+      "desc": "Diario dominicano",
+      "country": "do",
+      "feed": "https://eldia.com.do/feed/",
+      "site": "https://eldia.com.do/",
+      "icon": "catalog-icons/el-dia-do.png",
+      "perWeek": 105
+    },
+    {
+      "name": "N Digital",
+      "cat": "nacionales",
+      "desc": "Noticias SIN y actualidad",
+      "country": "do",
+      "feed": "https://n.com.do/feed/",
+      "site": "https://n.com.do/",
+      "icon": "catalog-icons/n-digital-do.png",
+      "perWeek": 98
+    },
+    {
+      "name": "Acento",
+      "cat": "nacionales",
+      "desc": "Periodismo de análisis y opinión",
+      "country": "do",
+      "feed": "https://acento.com.do/",
+      "kind": "page",
+      "site": "https://acento.com.do",
+      "icon": "catalog-icons/acento-do.png"
+    },
+    {
+      "name": "El Nuevo Diario",
+      "cat": "nacionales",
+      "desc": "Diario digital dominicano",
+      "country": "do",
+      "feed": "https://elnuevodiario.com.do/feed/",
+      "site": "https://elnuevodiario.com.do",
+      "icon": "catalog-icons/el-nuevo-diario-do.png",
+      "perWeek": 70
+    },
+    {
+      "name": "CDN",
+      "cat": "nacionales",
+      "desc": "Cadena de Noticias",
+      "country": "do",
+      "feed": "https://cdn.com.do/",
+      "kind": "page",
+      "site": "https://cdn.com.do",
+      "icon": "catalog-icons/cdn-do.png"
+    },
+    {
+      "name": "Z Digital",
+      "cat": "nacionales",
+      "desc": "Noticias y deportes de Z101",
+      "country": "do",
+      "feed": "https://z101digital.com/",
+      "kind": "page",
+      "site": "https://z101digital.com",
+      "icon": "catalog-icons/z-digital-do.png"
+    },
+    {
+      "name": "La Prensa",
+      "cat": "nacionales",
+      "desc": "Diario de referencia de Panamá",
+      "top": true,
+      "country": "pa",
+      "feed": "https://www.prensa.com/",
+      "kind": "page",
+      "site": "https://www.prensa.com",
+      "icon": "catalog-icons/la-prensa-pa.png"
+    },
+    {
+      "name": "TVN Noticias",
+      "cat": "nacionales",
+      "desc": "Actualidad de Panamá",
+      "country": "pa",
+      "feed": "https://www.tvn-2.com/rss/",
+      "site": "https://www.tvn-2.com/",
+      "icon": "catalog-icons/tvn-noticias-pa.png",
+      "perWeek": 1
+    },
+    {
+      "name": "La Estrella de Panamá",
+      "cat": "nacionales",
+      "desc": "El diario más antiguo del país",
+      "top": true,
+      "country": "pa",
+      "feed": "https://www.laestrella.com.pa/",
+      "kind": "page",
+      "site": "https://www.laestrella.com.pa",
+      "icon": "catalog-icons/la-estrella-de-panama-pa.png"
+    },
+    {
+      "name": "Panamá América",
+      "cat": "nacionales",
+      "desc": "Diario generalista",
+      "country": "pa",
+      "feed": "https://www.panamaamerica.com.pa/rss/recent/index.xml",
+      "site": "https://www.panamaamerica.com.pa/",
+      "icon": "catalog-icons/panama-america-pa.png"
+    },
+    {
+      "name": "Prensa Libre",
+      "cat": "nacionales",
+      "desc": "Diario de referencia de Guatemala",
+      "top": true,
+      "country": "gt",
+      "feed": "https://www.prensalibre.com/feed/",
+      "site": "https://www.prensalibre.com",
+      "icon": "catalog-icons/prensa-libre-gt.png",
+      "perWeek": 373
+    },
+    {
+      "name": "Soy502",
+      "cat": "nacionales",
+      "desc": "Noticias de Guatemala",
+      "country": "gt",
+      "feed": "https://www.soy502.com/",
+      "kind": "page",
+      "site": "https://www.soy502.com",
+      "icon": "catalog-icons/soy502-gt.png"
+    },
+    {
+      "name": "La Hora",
+      "cat": "nacionales",
+      "desc": "Vespertino guatemalteco",
+      "top": true,
+      "country": "gt",
+      "feed": "https://lahora.gt/feed/",
+      "site": "https://lahora.gt/",
+      "icon": "catalog-icons/la-hora-gt.png",
+      "perWeek": 70
+    },
+    {
+      "name": "Plaza Pública",
+      "cat": "nacionales",
+      "desc": "Periodismo de profundidad",
+      "country": "gt",
+      "feed": "https://plazapublica.com.gt/feed/",
+      "site": "https://plazapublica.com.gt/",
+      "icon": "catalog-icons/plaza-publica-gt.png",
+      "perWeek": 24
+    },
+    {
+      "name": "El Deber",
+      "cat": "nacionales",
+      "desc": "Diario de Santa Cruz",
+      "top": true,
+      "country": "bo",
+      "feed": "https://eldeber.com.bo/feed",
+      "site": "https://eldeber.com.bo/",
+      "icon": "catalog-icons/el-deber-bo.png",
+      "perWeek": 161
+    },
+    {
+      "name": "Los Tiempos",
+      "cat": "nacionales",
+      "desc": "Diario de Cochabamba",
+      "top": true,
+      "country": "bo",
+      "feed": "https://www.lostiempos.com/",
+      "kind": "page",
+      "site": "https://www.lostiempos.com"
+    },
+    {
+      "name": "Opinión",
+      "cat": "nacionales",
+      "desc": "Diario boliviano",
+      "country": "bo",
+      "feed": "https://www.opinion.com.bo/rss/",
+      "site": "https://www.opinion.com.bo/",
+      "icon": "catalog-icons/opinion-bo.png",
+      "perWeek": 140
+    },
+    {
+      "name": "ABC Color",
+      "cat": "nacionales",
+      "desc": "Diario de referencia de Paraguay",
+      "top": true,
+      "country": "py",
+      "feed": "https://www.abc.com.py/arc/outboundfeeds/rss/?outputType=xml",
+      "site": "https://www.abc.com.py/",
+      "icon": "catalog-icons/abc-color-py.png",
+      "perWeek": 700
+    },
+    {
+      "name": "Última Hora",
+      "cat": "nacionales",
+      "desc": "Actualidad paraguaya",
+      "top": true,
+      "country": "py",
+      "feed": "https://www.ultimahora.com/",
+      "kind": "page",
+      "site": "https://www.ultimahora.com",
+      "icon": "catalog-icons/ultima-hora-py.png"
+    },
+    {
+      "name": "La Nación",
+      "cat": "nacionales",
+      "desc": "Diario paraguayo",
+      "country": "py",
+      "feed": "https://www.lanacion.com.py/",
+      "kind": "page",
+      "site": "https://www.lanacion.com.py",
+      "icon": "catalog-icons/la-nacion-py.png"
+    },
+    {
+      "name": "El Nuevo Día",
+      "cat": "nacionales",
+      "desc": "Diario de referencia de Puerto Rico",
+      "top": true,
+      "country": "pr",
+      "feed": "https://www.elnuevodia.com/",
+      "kind": "page",
+      "site": "https://www.elnuevodia.com",
+      "icon": "catalog-icons/el-nuevo-dia-pr.png"
+    },
+    {
+      "name": "Primera Hora",
+      "cat": "nacionales",
+      "desc": "Noticias de Puerto Rico",
+      "country": "pr",
+      "feed": "https://www.primerahora.com/",
+      "kind": "page",
+      "site": "https://www.primerahora.com",
+      "icon": "catalog-icons/primera-hora-pr.png"
+    },
+    {
+      "name": "Metro Puerto Rico",
+      "cat": "nacionales",
+      "desc": "Actualidad de la isla",
+      "top": true,
+      "country": "pr",
+      "feed": "https://www.metro.pr/arc/outboundfeeds/rss/",
+      "site": "https://www.metro.pr/",
+      "icon": "catalog-icons/metro-puerto-rico-pr.png",
+      "perWeek": 329
+    },
+    {
+      "name": "NotiCel",
+      "cat": "nacionales",
+      "desc": "Periodismo digital puertorriqueño",
+      "country": "pr",
+      "feed": "https://noticel.com/feed/",
+      "site": "https://noticel.com/",
+      "icon": "catalog-icons/noticel-pr.png",
+      "perWeek": 70
+    },
+    {
+      "name": "Xataka Móvil",
+      "cat": "tecnologia",
+      "desc": "Móviles, operadoras y tarifas",
+      "feed": "https://www.xatakamovil.com/feedburner.xml",
+      "site": "https://www.xatakamovil.com/",
+      "icon": "catalog-icons/xataka-movil-tecnologia.png",
+      "perWeek": 37
+    },
+    {
+      "name": "Andro4all",
+      "cat": "tecnologia",
+      "desc": "Android, móviles y gadgets",
+      "feed": "https://www.larazon.es/tecnologia-consumo/?outputType=xml",
+      "site": "https://www.larazon.es/tecnologia-consumo/",
+      "icon": "catalog-icons/andro4all-tecnologia.png",
+      "perWeek": 105
+    },
+    {
+      "name": "WIRED en español",
+      "cat": "tecnologia",
+      "desc": "Tecnología, ciencia y cultura",
+      "feed": "https://es.wired.com/feed/rss",
+      "site": "https://es.wired.com/",
+      "perWeek": 58
+    },
+    {
+      "name": "El Chapuzas Informático",
+      "cat": "tecnologia",
+      "desc": "Hardware y componentes de PC",
+      "feed": "https://elchapuzasinformatico.com/feed/",
+      "site": "https://elchapuzasinformatico.com/",
+      "perWeek": 70,
+      "icon": "catalog-icons/el-chapuzas-informatico-tecnologia.png"
+    },
+    {
+      "name": "HardZone",
+      "cat": "tecnologia",
+      "desc": "Hardware, montaje y análisis",
+      "feed": "https://hardzone.es/feed/",
+      "site": "https://hardzone.es/",
+      "icon": "catalog-icons/hardzone-tecnologia.png",
+      "perWeek": 50
+    },
+    {
+      "name": "ADSLZone",
+      "cat": "tecnologia",
+      "desc": "Internet, operadoras y streaming",
+      "feed": "https://www.adslzone.net/feed/",
+      "site": "https://www.adslzone.net/",
+      "icon": "catalog-icons/adslzone-tecnologia.png",
+      "perWeek": 94
+    },
+    {
+      "name": "Computer Hoy",
+      "cat": "tecnologia",
+      "desc": "Tecnología práctica y análisis",
+      "feed": "https://computerhoy.20minutos.es/rss/",
+      "site": "https://computerhoy.20minutos.es/",
+      "icon": "catalog-icons/computer-hoy-tecnologia.png",
+      "perWeek": 27
+    },
+    {
+      "name": "Una al Día",
+      "cat": "tecnologia",
+      "desc": "Seguridad informática cada día",
+      "feed": "https://unaaldia.hispasec.com/feed/",
+      "site": "https://unaaldia.hispasec.com/",
+      "icon": "catalog-icons/una-al-dia-tecnologia.png",
+      "perWeek": 3
+    },
+    {
+      "name": "Engadget",
+      "cat": "tecnologia",
+      "desc": "Gadgets y electrónica de consumo",
+      "lang": "en",
+      "feed": "https://www.engadget.com/category/news/feed/",
+      "site": "https://www.engadget.com/",
+      "icon": "catalog-icons/engadget-tecnologia.png",
+      "perWeek": 122
+    },
+    {
+      "name": "BleepingComputer",
+      "cat": "tecnologia",
+      "desc": "Seguridad y ataques informáticos",
+      "lang": "en",
+      "feed": "https://www.bleepingcomputer.com/feed/",
+      "site": "https://www.bleepingcomputer.com/",
+      "icon": "catalog-icons/bleepingcomputer-tecnologia.png",
+      "perWeek": 37
+    },
+    {
+      "name": "9to5Google",
+      "cat": "tecnologia",
+      "desc": "Google, Android y Pixel",
+      "lang": "en",
+      "feed": "https://9to5google.com/feed/",
+      "site": "https://9to5google.com/",
+      "icon": "catalog-icons/9to5google-tecnologia.png",
+      "perWeek": 100
+    },
+    {
+      "name": "Hobby Consolas",
+      "cat": "gaming",
+      "desc": "Videojuegos, cine y entretenimiento",
+      "feed": "https://www.hobbyconsolas.com/rss/",
+      "site": "https://www.hobbyconsolas.com/",
+      "icon": "catalog-icons/hobby-consolas-gaming.png",
+      "perWeek": 1
+    },
+    {
+      "name": "Gamereactor",
+      "cat": "gaming",
+      "desc": "Noticias y análisis de videojuegos",
+      "feed": "https://www.gamereactor.es/feed/",
+      "site": "https://www.gamereactor.es/",
+      "icon": "catalog-icons/gamereactor-gaming.png",
+      "perWeek": 23
+    },
+    {
+      "name": "LevelUp",
+      "cat": "gaming",
+      "desc": "Videojuegos para Latinoamérica",
+      "feed": "https://www.levelup.com/",
+      "kind": "page",
+      "site": "https://www.levelup.com",
+      "icon": "catalog-icons/levelup-gaming.png"
+    },
+    {
+      "name": "AnaitGames",
+      "cat": "gaming",
+      "desc": "Crítica y cultura del videojuego",
+      "feed": "https://www.anaitgames.com/feed",
+      "site": "https://www.anaitgames.com/",
+      "icon": "catalog-icons/anaitgames-gaming.png",
+      "perWeek": 23
+    },
+    {
+      "name": "Nintendo Life",
+      "cat": "gaming",
+      "desc": "Todo sobre Nintendo",
+      "lang": "en",
+      "feed": "https://www.nintendolife.com/feeds/latest",
+      "site": "https://www.nintendolife.com/feeds/latest",
+      "perWeek": 58,
+      "icon": "catalog-icons/nintendo-life-gaming.png"
+    },
+    {
+      "name": "Kotaku",
+      "cat": "gaming",
+      "desc": "Cultura y actualidad del videojuego",
+      "lang": "en",
+      "feed": "https://kotaku.com/feed",
+      "site": "https://kotaku.com/",
+      "icon": "catalog-icons/kotaku-gaming.png",
+      "perWeek": 69
+    },
+    {
+      "name": "Polygon",
+      "cat": "gaming",
+      "desc": "Videojuegos y entretenimiento",
+      "lang": "en",
+      "feed": "https://www.polygon.com/feed/",
+      "site": "https://www.polygon.com/",
+      "icon": "catalog-icons/polygon-gaming.png",
+      "perWeek": 70
+    },
+    {
+      "name": "GamesIndustry.biz",
+      "cat": "gaming",
+      "desc": "El negocio del videojuego",
+      "lang": "en",
+      "feed": "https://www.gamesindustry.biz/feed",
+      "site": "https://www.gamesindustry.biz/feed",
+      "icon": "catalog-icons/gamesindustry-biz-gaming.png",
+      "perWeek": 33
+    },
+    {
+      "name": "eCartelera",
+      "cat": "cultura",
+      "desc": "Cine: estrenos, tráilers y críticas",
+      "feed": "https://www.ecartelera.com/rss/feed.xml",
+      "site": "https://www.ecartelera.com/",
+      "icon": "catalog-icons/ecartelera-cultura.png",
+      "perWeek": 10
+    },
+    {
+      "name": "Cinemanía",
+      "cat": "cultura",
+      "desc": "Cine y series",
+      "feed": "https://www.20minutos.es/rss/cinemania/",
+      "site": "https://www.20minutos.es/",
+      "icon": "catalog-icons/cinemania-cultura.png",
+      "perWeek": 17
+    },
+    {
+      "name": "FormulaTV",
+      "cat": "cultura",
+      "desc": "Televisión y series",
+      "feed": "https://www.formulatv.com/xml/formulatv.xml",
+      "site": "https://www.formulatv.com/",
+      "icon": "catalog-icons/formulatv-cultura.png",
+      "perWeek": 65
+    },
+    {
+      "name": "El Séptimo Arte",
+      "cat": "cultura",
+      "desc": "Noticias y críticas de cine",
+      "feed": "https://www.elseptimoarte.net/",
+      "kind": "page",
+      "site": "https://www.elseptimoarte.net",
+      "icon": "catalog-icons/el-septimo-arte-cultura.png"
+    },
+    {
+      "name": "Fuera de Series",
+      "cat": "cultura",
+      "desc": "Series: crítica y recomendaciones",
+      "feed": "https://fueradeseries.com/feed/",
+      "site": "https://fueradeseries.com/",
+      "icon": "catalog-icons/fuera-de-series-cultura.png",
+      "perWeek": 13
+    },
+    {
+      "name": "Collider",
+      "cat": "cultura",
+      "desc": "Cine, series y entrevistas",
+      "lang": "en",
+      "feed": "https://collider.com/feed/",
+      "site": "https://collider.com/",
+      "icon": "catalog-icons/collider-cultura.png",
+      "perWeek": 70
+    },
+    {
+      "name": "Variety",
+      "cat": "cultura",
+      "desc": "La industria del entretenimiento",
+      "lang": "en",
+      "feed": "https://variety.com/feed/",
+      "site": "https://variety.com/",
+      "icon": "catalog-icons/variety-cultura.png",
+      "perWeek": 70
+    },
+    {
+      "name": "Eureka",
+      "cat": "ciencia",
+      "desc": "Astronáutica y espacio, por Daniel Marín",
+      "top": true,
+      "feed": "http://feeds.feedburner.com/naukas/danielmarin",
+      "site": "https://danielmarin.naukas.com/",
+      "icon": "catalog-icons/eureka-ciencia.png",
+      "perWeek": 3
+    },
+    {
+      "name": "La Ciencia de la Mula Francis",
+      "cat": "ciencia",
+      "desc": "Física y ciencia al detalle",
+      "feed": "http://feeds.feedburner.com/naukas/francis",
+      "site": "https://francis.naukas.com/",
+      "icon": "catalog-icons/la-ciencia-de-la-mula-francis-ciencia.png",
+      "perWeek": 1
+    },
+    {
+      "name": "Quanta Magazine",
+      "cat": "ciencia",
+      "desc": "Matemáticas, física y biología a fondo",
+      "lang": "en",
+      "feed": "https://www.quantamagazine.org/feed/",
+      "site": "https://www.quantamagazine.org/",
+      "icon": "catalog-icons/quanta-magazine-ciencia.png",
+      "perWeek": 5
+    },
+    {
+      "name": "Space.com",
+      "cat": "ciencia",
+      "desc": "Espacio y astronomía",
+      "lang": "en",
+      "feed": "https://www.space.com/",
+      "kind": "page",
+      "site": "https://www.space.com",
+      "icon": "catalog-icons/space-com-ciencia.png"
+    },
+    {
+      "name": "NASA en español",
+      "cat": "ciencia",
+      "desc": "Ciencia y misiones de la NASA",
+      "feed": "https://ciencia.nasa.gov/feed/",
+      "site": "https://ciencia.nasa.gov/",
+      "icon": "catalog-icons/nasa-en-espanol-ciencia.png",
+      "perWeek": 12
+    },
+    {
+      "name": "Import AI",
+      "cat": "ia",
+      "desc": "Boletín semanal de investigación en IA",
+      "lang": "en",
+      "feed": "https://importai.substack.com/feed",
+      "site": "https://importai.substack.com/",
+      "icon": "catalog-icons/import-ai-ia.png",
+      "perWeek": 1
+    },
+    {
+      "name": "One Useful Thing",
+      "cat": "ia",
+      "desc": "IA aplicada, por Ethan Mollick",
+      "lang": "en",
+      "feed": "https://www.oneusefulthing.org/feed",
+      "site": "https://www.oneusefulthing.org/",
+      "icon": "catalog-icons/one-useful-thing-ia.png",
+      "perWeek": 1
+    },
+    {
+      "name": "Google DeepMind",
+      "cat": "ia",
+      "desc": "Investigación y anuncios",
+      "lang": "en",
+      "feed": "https://deepmind.google/blog/rss.xml",
+      "site": "https://deepmind.google/blog/",
+      "icon": "catalog-icons/google-deepmind-ia.png",
+      "perWeek": 2
+    },
+    {
+      "name": "Latent Space",
+      "cat": "ia",
+      "desc": "Ingeniería de IA",
+      "lang": "en",
+      "feed": "https://www.latent.space/feed",
+      "site": "https://www.latent.space/",
+      "icon": "catalog-icons/latent-space-ia.png",
+      "perWeek": 12
+    },
+    {
+      "name": "DEV Community",
+      "cat": "desarrollo",
+      "desc": "Artículos de la comunidad de desarrollo",
+      "lang": "en",
+      "feed": "https://dev.to/feed",
+      "site": "https://dev.to/",
+      "icon": "catalog-icons/dev-community-desarrollo.png",
+      "perWeek": 84
+    },
+    {
+      "name": "Stack Overflow Blog",
+      "cat": "desarrollo",
+      "desc": "Ingeniería y comunidad",
+      "lang": "en",
+      "feed": "https://stackoverflow.blog/feed/",
+      "site": "https://stackoverflow.blog/",
+      "icon": "catalog-icons/stack-overflow-blog-desarrollo.png",
+      "perWeek": 4
+    },
+    {
+      "name": "Martin Fowler",
+      "cat": "desarrollo",
+      "desc": "Arquitectura y diseño de software",
+      "lang": "en",
+      "feed": "https://martinfowler.com/feed.atom",
+      "site": "https://martinfowler.com/",
+      "icon": "catalog-icons/martin-fowler-desarrollo.png",
+      "perWeek": 3
+    },
+    {
+      "name": "The Pragmatic Engineer",
+      "cat": "desarrollo",
+      "desc": "La industria vista desde dentro",
+      "lang": "en",
+      "feed": "https://blog.pragmaticengineer.com/rss/",
+      "site": "https://blog.pragmaticengineer.com/",
+      "icon": "catalog-icons/the-pragmatic-engineer-desarrollo.png",
+      "perWeek": 1
+    },
+    {
+      "name": "React",
+      "cat": "desarrollo",
+      "desc": "Novedades de la librería",
+      "lang": "en",
+      "feed": "https://react.dev/rss.xml",
+      "site": "https://react.dev/",
+      "icon": "catalog-icons/react-desarrollo.png",
+      "perWeek": 1
+    },
+    {
+      "name": "Node.js",
+      "cat": "desarrollo",
+      "desc": "Versiones y anuncios",
+      "lang": "en",
+      "feed": "https://nodejs.org/en/feed/blog.xml",
+      "site": "https://nodejs.org/en",
+      "icon": "catalog-icons/node-js-desarrollo.png",
+      "perWeek": 1
+    },
+    {
+      "name": "Forbes España",
+      "cat": "economia",
+      "desc": "Negocios, empresas y fortunas",
+      "feed": "https://forbes.es/feed/",
+      "site": "https://forbes.es/",
+      "icon": "catalog-icons/forbes-espana-economia.png",
+      "perWeek": 154
+    },
+    {
+      "name": "Forbes México",
+      "cat": "economia",
+      "desc": "Negocios y economía",
+      "feed": "https://forbes.com.mx/",
+      "kind": "page",
+      "site": "https://forbes.com.mx",
+      "icon": "catalog-icons/forbes-mexico-economia.png"
+    },
+    {
+      "name": "Business Insider España",
+      "cat": "economia",
+      "desc": "Economía, empresa y tecnología",
+      "feed": "https://www.businessinsider.es/rss/",
+      "site": "https://www.businessinsider.es/",
+      "icon": "catalog-icons/business-insider-espana-economia.png",
+      "perWeek": 4
+    },
+    {
+      "name": "El Dinero",
+      "cat": "economia",
+      "desc": "Economía y finanzas dominicanas",
+      "feed": "https://eldinero.com.do/feed/",
+      "site": "https://eldinero.com.do/",
+      "icon": "catalog-icons/el-dinero-economia.png",
+      "perWeek": 73
+    },
+    {
+      "name": "Motorsport",
+      "cat": "deportes",
+      "desc": "Automovilismo y motociclismo",
+      "feed": "https://es.motorsport.com/rss/all/news/",
+      "site": "https://es.motorsport.com/all/news/?utm_source=RSS&utm_medium=referral&utm_campaign=RSS-ALL&utm_term=News&utm_content=es",
+      "perWeek": 302,
+      "icon": "catalog-icons/motorsport-deportes.png"
+    },
+    {
+      "name": "TyC Sports",
+      "cat": "deportes",
+      "desc": "Deporte argentino",
+      "feed": "https://www.tycsports.com/",
+      "kind": "page",
+      "site": "https://www.tycsports.com"
+    },
+    {
+      "name": "NBA Maniacs",
+      "cat": "deportes",
+      "desc": "La NBA en español",
+      "feed": "https://www.nbamaniacs.com/feed/",
+      "site": "https://www.nbamaniacs.com/",
+      "icon": "catalog-icons/nba-maniacs-deportes.png",
+      "perWeek": 44
+    },
+    {
+      "name": "MLB en español",
+      "cat": "deportes",
+      "desc": "Grandes Ligas",
+      "feed": "https://www.mlb.com/es",
+      "kind": "page",
+      "site": "https://www.mlb.com",
+      "icon": "catalog-icons/mlb-en-espanol-deportes.png"
+    },
+    {
+      "name": "Mediotiempo",
+      "cat": "deportes",
+      "desc": "Deporte mexicano",
+      "feed": "https://www.mediotiempo.com/",
+      "kind": "page",
+      "site": "https://www.mediotiempo.com",
+      "icon": "catalog-icons/mediotiempo-deportes.png"
+    },
+    {
+      "name": "Directo al Paladar",
+      "cat": "gastronomia",
+      "desc": "Recetas y cultura gastronómica",
+      "top": true,
+      "feed": "https://www.directoalpaladar.com/feedburner.xml",
+      "site": "https://www.directoalpaladar.com/",
+      "icon": "catalog-icons/directo-al-paladar-gastronomia.png",
+      "perWeek": 140
+    },
+    {
+      "name": "El Comidista",
+      "cat": "gastronomia",
+      "desc": "Cocina con humor, de El País",
+      "top": true,
+      "feed": "https://feeds.elpais.com/mrss-s/list/ep/site/elpais.com/section/gastronomia/subsection/el-comidista",
+      "site": "https://elpais.com/",
+      "icon": "catalog-icons/el-comidista-gastronomia.png",
+      "perWeek": 10
+    },
+    {
+      "name": "Gastroactitud",
+      "cat": "gastronomia",
+      "desc": "Restaurantes, productos y viajes",
+      "feed": "https://www.gastroactitud.com/",
+      "kind": "page",
+      "site": "https://www.gastroactitud.com",
+      "icon": "catalog-icons/gastroactitud-gastronomia.png"
+    },
+    {
+      "name": "Bon Viveur",
+      "cat": "gastronomia",
+      "desc": "Recetas paso a paso",
+      "feed": "https://bonviveur.com/es/rss",
+      "site": "https://bonviveur.com/es/",
+      "icon": "catalog-icons/bon-viveur-gastronomia.png",
+      "perWeek": 28
+    },
+    {
+      "name": "Recetas de Rechupete",
+      "cat": "gastronomia",
+      "desc": "Cocina casera",
+      "feed": "https://www.abc.es/recetasderechupete/",
+      "kind": "page",
+      "site": "https://www.abc.es",
+      "icon": "catalog-icons/recetas-de-rechupete-gastronomia.png"
+    },
+    {
+      "name": "Animal Gourmet",
+      "cat": "gastronomia",
+      "desc": "Gastronomía mexicana",
+      "feed": "https://grupoanimal.mx/gastronomia",
+      "kind": "page",
+      "site": "https://grupoanimal.mx",
+      "icon": "catalog-icons/animal-gourmet-gastronomia.png"
+    },
+    {
+      "name": "Cocinillas",
+      "cat": "gastronomia",
+      "desc": "Recetas y actualidad gastronómica",
+      "feed": "https://www.elespanol.com/rss/cocinillas/",
+      "site": "https://www.elespanol.com/cocinillas/",
+      "icon": "catalog-icons/cocinillas-gastronomia.png",
+      "perWeek": 29
+    },
+    {
+      "name": "Binaural",
+      "cat": "musica",
+      "desc": "Música independiente",
+      "feed": "https://www.binaural.es/feed/",
+      "site": "https://www.binaural.es/",
+      "icon": "catalog-icons/binaural-musica.png",
+      "perWeek": 10
+    },
+    {
+      "name": "MondoSonoro",
+      "cat": "musica",
+      "desc": "Música alternativa",
+      "feed": "https://www.mondosonoro.com/feed/",
+      "site": "https://www.mondosonoro.com/",
+      "icon": "catalog-icons/mondosonoro-musica.png",
+      "perWeek": 35
+    },
+    {
+      "name": "Pitchfork",
+      "cat": "musica",
+      "desc": "Crítica y novedades musicales",
+      "lang": "en",
+      "feed": "https://pitchfork.com/feed/rss",
+      "site": "https://pitchfork.com/",
+      "icon": "catalog-icons/pitchfork-musica.png",
+      "perWeek": 52
+    },
+    {
+      "name": "Autopista",
+      "cat": "motor",
+      "desc": "Coches: pruebas y novedades",
+      "feed": "https://www.autopista.es/uploads/feeds/feed_autopista_es.xml",
+      "site": "https://www.autopista.es/uploads/feeds/feed_autopista_es.xml",
+      "perWeek": 56
+    },
+    {
+      "name": "Forococheselectricos",
+      "cat": "motor",
+      "desc": "Movilidad eléctrica",
+      "feed": "https://forococheselectricos.com/feed",
+      "site": "https://forococheselectricos.com/",
+      "icon": "catalog-icons/forococheselectricos-motor.png",
+      "perWeek": 89
+    },
+    {
+      "name": "Viajestic",
+      "cat": "viajes",
+      "desc": "Destinos e ideas de viaje",
+      "feed": "https://www.lasexta.com/viajestic/rss/665955.xml",
+      "site": "https://www.lasexta.com/viajestic/",
+      "icon": "catalog-icons/viajestic-viajes.png",
+      "perWeek": 14
+    },
+    {
+      "name": "Los Viajes de Domi",
+      "cat": "viajes",
+      "desc": "Guías y consejos de viaje",
+      "feed": "https://losviajesdedomi.com/feed/",
+      "site": "https://losviajesdedomi.com/",
+      "icon": "catalog-icons/los-viajes-de-domi-viajes.png",
+      "perWeek": 2
+    },
+    {
+      "name": "Nate Gentile",
+      "cat": "video",
+      "desc": "Hardware y tecnología",
+      "feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UC36xmz34q02JYaZYKrMwXng",
+      "site": "https://www.youtube.com/channel/UC36xmz34q02JYaZYKrMwXng",
+      "icon": "catalog-icons/nate-gentile-video.png",
+      "perWeek": 1
+    },
+    {
+      "name": "CdeCiencia",
+      "cat": "video",
+      "desc": "Ciencia y grandes preguntas",
+      "feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UC52hytXteCKmuOzMViTK8_w",
+      "site": "https://www.youtube.com/channel/UC52hytXteCKmuOzMViTK8_w",
+      "icon": "catalog-icons/cdeciencia-video.png",
+      "perWeek": 2
+    },
+    {
+      "name": "La gata de Schrödinger",
+      "cat": "video",
+      "desc": "Ciencia y pensamiento crítico",
+      "feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCoXtmmnLCbXDiSo8GxsmOzA",
+      "site": "https://www.youtube.com/channel/UCoXtmmnLCbXDiSo8GxsmOzA",
+      "icon": "catalog-icons/la-gata-de-schrodinger-video.png",
+      "perWeek": 2
+    },
+    {
+      "name": "El Robot de Platón",
+      "cat": "video",
+      "desc": "Ciencia y astronomía",
+      "feed": "https://www.youtube.com/feeds/videos.xml?channel_id=UCaVPhFg-Ax873wvhbNitsrQ",
+      "site": "https://www.youtube.com/channel/UCaVPhFg-Ax873wvhbNitsrQ",
+      "icon": "catalog-icons/el-robot-de-platon-video.png",
+      "perWeek": 5
+    }
+  ]
+}

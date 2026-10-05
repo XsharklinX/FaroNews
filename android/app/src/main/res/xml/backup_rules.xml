@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 y anteriores. Solo se copia faro-datos.json (ver src/ports/snapshot.js). -->
+<full-backup-content>
+    <include domain="file" path="faro-datos.json" />
+</full-backup-content>

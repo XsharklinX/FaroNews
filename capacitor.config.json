@@ -1,0 +1,24 @@
+{
+  "appId": "com.faronews.app",
+  "appName": "Faro",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": false,
+    "webContentsDebuggingEnabled": true,
+    "backgroundColor": "#0F1B33",
+    "adjustMarginsForEdgeToEdge": "auto"
+  },
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "StatusBar": {
+      "overlaysWebView": true
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_faro",
+      "iconColor": "#FFC53D"
+    }
+  }
+}

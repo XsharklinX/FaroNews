@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#0F1B33</color>
+    <!-- Fondo de la ventana: se ve tras las barras del sistema. Igual que el token bg de app.css. -->
+    <color name="faro_bg">#FFFFFF</color>
+</resources>
