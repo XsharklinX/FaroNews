@@ -17,7 +17,7 @@ export function crc32(bytes) {
     return (crc ^ 0xffffffff) >>> 0;
 }
 
-// files: [{ name, text }]. Devuelve los bytes del .zip.
+// files: [{ name, text }] o [{ name, bytes }]. Devuelve los bytes del .zip.
 export function makeZip(files) {
     const encoder = new TextEncoder();
     const parts = [];
@@ -35,7 +35,7 @@ export function makeZip(files) {
 
     for (const file of files) {
         const name = encoder.encode(file.name);
-        const data = encoder.encode(file.text);
+        const data = file.bytes || encoder.encode(file.text);
         const crc = crc32(data);
         const common = (view, at) => {
             view.setUint16(at, 20, true); // versión necesaria

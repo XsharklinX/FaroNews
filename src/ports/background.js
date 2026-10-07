@@ -154,6 +154,11 @@ export async function translateTexts(texts, { wifiOnly = false } = {}) {
     return (await Native.translate({ texts, wifiOnly })).texts;
 }
 
+// Tamaño del texto de la app: el del teléfono (true) o el de siempre.
+export function followSystemText(on) {
+    if (canNotify) Native.setTextZoom({ follow: Boolean(on) }).catch(() => {});
+}
+
 // Lo que enseña el widget de la pantalla de inicio.
 export function setWidget(data) {
     if (canNotify) Native.setWidget(data).catch(() => {});

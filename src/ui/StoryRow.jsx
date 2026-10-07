@@ -36,7 +36,7 @@ export function StoryMeta({ article, source, reason, note = '' }) {
 
 // Lo que no cabe en la línea: comparar fuentes, guardado y resaltados.
 export function StoryChips({ article, also = [] }) {
-    if (!also.length && !article.saved && !article.highlights?.length) return null;
+    if (!also.length && !article.saved && !article.highlights?.length && !article.note) return null;
     return (
         <div className="story-chips">
             {also.length > 0 && (
@@ -45,6 +45,7 @@ export function StoryChips({ article, also = [] }) {
                 </button>
             )}
             {article.saved && <span className="chip">Guardado</span>}
+            {article.note && <span className="chip">Con nota</span>}
             {article.highlights?.length > 0 && (
                 <span className="chip">
                     {article.highlights.length} {article.highlights.length === 1 ? 'resaltado' : 'resaltados'}

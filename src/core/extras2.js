@@ -61,7 +61,8 @@ export function countryOf(source, catalog) {
     if (source.country) return source.country;
     const key = (u) => String(u || '').replace(/^https?:\/\/(www\.)?/, '').replace(/\/+$/, '');
     const entry = catalog?.sources?.find((s) => key(s.feed) === key(source.feedUrl));
-    if (entry?.country) return entry.country;
+    // `country` lo llevan los medios nacionales; `origin`, el resto del catálogo.
+    if (entry?.country || entry?.origin) return entry.country || entry.origin;
     try {
         const host = new URL(source.siteUrl || source.feedUrl).hostname.replace(/^www\./, '');
         const m = host.match(TLD) || host.match(/\.com\.(mx|co|ar|pe|ec|ve|uy|do|pa|gt|bo|py)$/);

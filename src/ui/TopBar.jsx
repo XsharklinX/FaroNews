@@ -6,14 +6,17 @@ import { useStore } from '../data/store.js';
 import Icon from './Icon.jsx';
 
 // La app dice aquí qué abren la campana y los ajustes.
-export const Chrome = createContext({ onInbox: () => {}, onSettings: () => {} });
+export const Chrome = createContext({ onInbox: () => {}, onSettings: () => {}, onSearch: () => {} });
 
 export function TopIcons() {
-    const { onInbox, onSettings } = useContext(Chrome);
+    const { onInbox, onSettings, onSearch } = useContext(Chrome);
     const { inbox, settings } = useStore();
     const unseen = inbox.some((entry) => entry.at > (settings.inboxSeenAt || 0));
     return (
         <div className="top-icons">
+            <button type="button" className="icon-btn" aria-label="Buscar en todo" onClick={onSearch}>
+                <Icon name="buscar" size={22} strokeWidth={1.8} />
+            </button>
             <button type="button" className="icon-btn" aria-label={unseen ? 'Avisos: hay nuevos' : 'Avisos'} onClick={onInbox}>
                 <Icon name="campana" size={22} strokeWidth={1.8} />
                 {unseen && <span className="bell-dot" />}

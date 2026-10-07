@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { actions, useStore } from './data/store.js';
-import { askPermission, canNotify, onNotificationOpen, onShared, onShortcut, setBars } from './ports/background.js';
+import { askPermission, canNotify, followSystemText, onNotificationOpen, onShared, onShortcut, setBars } from './ports/background.js';
+import { setDataSaver } from './ports/net.js';
+import { Buscar, Contado, Mundo, ViajeSheet } from './screens/Panorama.jsx';
 import Ajustes from './screens/Ajustes.jsx';
 import AnadirSheet from './screens/AnadirSheet.jsx';
 import Avisos from './screens/Avisos.jsx';
@@ -59,10 +61,19 @@ export default function App() {
     const [feedback, setFeedback] = useState(null);
     // Sube cuando hay que poner el cursor en el buscador de Explorar.
     const [searchFocus, setSearchFocus] = useState(0);
-    const chrome = useRef({ onInbox: () => setInboxOpen(true), onSettings: () => setSettingsOpen(true) }).current;
+    // Pantallas del buscador global, lo más contado, el mundo hoy y el viaje.
+    const [searchOpen, setSearchOpen] = useState(false);
+    const [coveredOpen, setCoveredOpen] = useState(false);
+    const [worldOpen, setWorldOpen] = useState(false);
+    const [tripOpen, setTripOpen] = useState(false);
+    const chrome = useRef({ onInbox: () => setInboxOpen(true), onSettings: () => setSettingsOpen(true), onSearch: () => setSearchOpen(true) }).current;
 
     // Titulares cebo, traducción, espóileres y ritmo de lectura: se aplican al pintar.
     setLook(settings);
+    setDataSaver(settings.dataSaver !== false);
+    useEffect(() => {
+        followSystemText(settings.systemText);
+    }, [settings.systemText]);
 
     // Tema elegido en Ajustes. «auto» deja decidir al teléfono.
     useEffect(() => {
@@ -108,6 +119,7 @@ export default function App() {
         else if (feedback) setFeedback(null);
         else if (menu) actions.closeMenu();
         else if (compare) actions.closeCompare();
+        else if (tripOpen) setTripOpen(false);
         else if (addMenu) setAddMenu(false);
         else if (watchAdd) setWatchAdd(false);
         else if (adding) setAdding(false);
@@ -120,6 +132,9 @@ export default function App() {
         else if (topicView) setTopicView(null);
         else if (siteView) setSiteView(null);
         else if (weekOpen) setWeekOpen(false);
+        else if (coveredOpen) setCoveredOpen(false);
+        else if (worldOpen) setWorldOpen(false);
+        else if (searchOpen) setSearchOpen(false);
         else if (rulesOpen) setRulesOpen(false);
         else if (statsOpen) setStatsOpen(false);
         else if (inboxOpen) setInboxOpen(false);
@@ -238,7 +253,7 @@ export default function App() {
         <div className={`app${playing.current ? ' has-player' : ''}`}>
             <PullToRefresh className="main" onRefresh={actions.refreshAll} busy={refreshing && (tab === 'hoy' || tab === 'explorar')}>
                 {tab === 'hoy' && <Hoy onOpen={open} onAdd={() => setAdding(true)} onCatalog={() => setCatalog(true)} onTab={setTab} onWeek={() => setWeekOpen(true)} />}
-                {tab === 'explorar' && <Lista mode="todo" onOpen={open} focus={searchFocus} />}
+                {tab === 'explorar' && <Lista mode="todo" onOpen={open} focus={searchFocus} onCovered={() => setCoveredOpen(true)} onWorld={() => setWorldOpen(true)} />}
                 {tab === 'biblioteca' && <Biblioteca onOpen={open} />}
                 {tab === 'fuentes' && <Fuentes onCatalog={() => setCatalog(true)} onEdit={setSiteView} onTopicEdit={setTopicEdit} onTopicOpen={setTopicView} onWatch={() => setWatchAdd(true)} />}
             </PullToRefresh>
@@ -261,7 +276,10 @@ export default function App() {
                 ))}
             </nav>
 
-            {settingsOpen && <Ajustes onClose={() => setSettingsOpen(false)} onNotify={() => setNotifyOpen(true)} onStats={() => setStatsOpen(true)} onFeedback={() => setFeedback('comentario')} onRules={() => setRulesOpen(true)} />}
+            {settingsOpen && <Ajustes onClose={() => setSettingsOpen(false)} onNotify={() => setNotifyOpen(true)} onStats={() => setStatsOpen(true)} onFeedback={() => setFeedback('comentario')} onRules={() => setRulesOpen(true)} onTrip={() => setTripOpen(true)} />}
+            {searchOpen && <Buscar onClose={() => setSearchOpen(false)} onOpen={open} onSite={setSiteView} onCatalog={() => setCatalog(true)} />}
+            {coveredOpen && <Contado onClose={() => setCoveredOpen(false)} onOpen={open} />}
+            {worldOpen && <Mundo onClose={() => setWorldOpen(false)} onOpen={open} />}
             {rulesOpen && <Reglas onClose={() => setRulesOpen(false)} />}
             {statsOpen && <Estadisticas onClose={() => setStatsOpen(false)} onWeek={() => setWeekOpen(true)} />}
             {weekOpen && <Semana onClose={() => setWeekOpen(false)} onOpen={open} />}
@@ -344,6 +362,7 @@ export default function App() {
             {menu && <StoryMenu id={menu} onOpen={openOne} />}
             {tagging && <TagsSheet id={tagging} />}
             {watchAdd && <WatchSheet onClose={() => setWatchAdd(false)} />}
+            {tripOpen && <ViajeSheet onClose={() => setTripOpen(false)} />}
             {pausing && <PauseSheet target={pausing} />}
             {feedback && <FeedbackSheet kind={feedback} onClose={() => setFeedback(null)} />}
             {shared && (

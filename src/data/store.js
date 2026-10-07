@@ -29,9 +29,11 @@ import { db } from '../ports/db.js';
 import { tap } from '../ports/haptics.js';
 import { fetchText } from '../ports/http.js';
 import { cacheImages, initImages, unpinImages } from '../ports/images.js';
+import { savingData } from '../ports/net.js';
 import { loadSnapshot, saveExternalCopy, saveSnapshot } from '../ports/snapshot.js';
 
-const DEFAULT_READER = { font: 'serif', margin: 'normal', theme: 'auto' };
+// paged: pasar páginas en vez de desplazarse. spacing y contrast: lectura accesible.
+const DEFAULT_READER = { font: 'serif', margin: 'normal', theme: 'auto', paged: false, spacing: 'normal', contrast: false };
 const DEFAULT_SETTINGS = {
     keywords: [],
     topics: [],
@@ -60,6 +62,10 @@ const DEFAULT_SETTINGS = {
     // Cambiar los titulares cebo por el dato, y traducir los titulares en inglés.
     baitFix: true,
     translateTitles: true,
+    // Sin fotos grandes ni descargas con datos móviles.
+    dataSaver: true,
+    // Seguir el tamaño de letra que el usuario eligió en Android.
+    systemText: false,
 };
 const WEEK = 7 * 86400000;
 const REPAIR_EVERY = 86400000;
@@ -109,6 +115,8 @@ let state = {
     tagging: null,
     // Titulares con posible espóiler que el usuario ya destapó en esta sesión.
     revealed: new Set(),
+    // Descarga para un viaje en curso: { done, total }.
+    packing: null,
     // Cambia cuando se guardan imágenes nuevas, para que las listas se repinten.
     imgTick: 0,
 };
@@ -370,7 +378,7 @@ function dropArticles(ids) {
 function prune() {
     const cutoff = Date.now() - KEEP_DAYS * 86400000;
     const inToday = new Set(state.today.items.flatMap((it) => [it.id, ...(it.also || [])]));
-    const old = state.articles.filter((a) => !a.saved && !a.highlights?.length && !inToday.has(a.id) && (a.publishedAt || a.fetchedAt) < cutoff && a.fetchedAt < cutoff);
+    const old = state.articles.filter((a) => !a.saved && !a.highlights?.length && !a.note && !inToday.has(a.id) && (a.publishedAt || a.fetchedAt) < cutoff && a.fetchedAt < cutoff);
     dropArticles(old.map((a) => a.id));
 }
 
@@ -387,6 +395,8 @@ async function downloadToday() {
         const body = await db.get('bodies', article.id);
         urls.push(...imagesOf(article, body?.fullHtml || body?.contentHtml));
     }
+    // Con datos móviles y el ahorro activado, las fotos esperan al wifi.
+    if (savingData()) return;
     if (await cacheImages(urls)) set({ imgTick: state.imgTick + 1 });
 }
 
@@ -646,7 +656,7 @@ export const actions = {
             .filter((e) => !have.has(urlKey(e.feed)))
             .map((e) => {
                 const busy = (e.perWeek || 0) >= BUSY_PER_WEEK;
-                const source = makeSource({ title: e.name, siteUrl: e.site || '', icon: e.icon, feedUrl: e.feed, kind: e.kind || '', folder: e.folder, level: busy ? 'importante' : 'todo', perWeek: e.perWeek ?? null, country: e.country || '' });
+                const source = makeSource({ title: e.name, siteUrl: e.site || '', icon: e.icon, feedUrl: e.feed, kind: e.kind || '', folder: e.folder, level: busy ? 'importante' : 'todo', perWeek: e.perWeek ?? null, country: e.country || e.origin || '' });
                 saveSource(source);
                 return { source, busy };
             });
@@ -1127,6 +1137,49 @@ export const actions = {
         if (!(ratio > 0.15 && ratio < 4)) return;
         const samples = [...(state.settings.pace || []), Math.round(ratio * 100) / 100].slice(-40);
         actions.setSettings({ pace: samples });
+    },
+
+    // Nota del usuario sobre un artículo entero.
+    setNote(id, note) {
+        patchArticle(id, { note: note.trim() });
+        queueSnapshot();
+    },
+
+    // Deja para leer sin conexión lo que el usuario elija antes de un viaje:
+    // { today, saved, latest }. Avanza en state.packing: { done, total }.
+    async packForTrip({ today = true, saved = true, latest = false }) {
+        if (state.packing) return 0;
+        const todayIds = new Set(state.today.items.map((it) => it.id));
+        const when = (a) => a.publishedAt || a.fetchedAt || 0;
+        const chosen = new Map();
+        if (today) for (const a of state.articles) if (todayIds.has(a.id)) chosen.set(a.id, a);
+        if (saved) for (const a of state.articles) if (a.saved) chosen.set(a.id, a);
+        if (latest) {
+            const fresh = state.articles.filter((a) => !a.read && !a.dismissed && !a.kind).sort((a, b) => when(b) - when(a)).slice(0, 100);
+            for (const a of fresh) chosen.set(a.id, a);
+        }
+        const list = [...chosen.values()].filter((a) => !a.kind);
+        set({ packing: { done: 0, total: list.length } });
+        let done = 0;
+        await pool(list, 3, async (a) => {
+            await actions.ensureFullText(a.id);
+            const body = await db.get('bodies', a.id);
+            await cacheImages(imagesOf(a, body?.fullHtml || body?.contentHtml), { pin: Boolean(a.saved) });
+            done++;
+            set({ packing: { done, total: list.length } });
+        });
+        set({ packing: null, imgTick: state.imgTick + 1 });
+        showToast(`${list.length} artículos listos para leer sin conexión`);
+        return list.length;
+    },
+    // Cuántos artículos entrarían en cada grupo del viaje.
+    tripCounts() {
+        const todayIds = new Set(state.today.items.map((it) => it.id));
+        return {
+            today: state.articles.filter((a) => todayIds.has(a.id) && !a.kind).length,
+            saved: state.articles.filter((a) => a.saved && !a.kind).length,
+            latest: Math.min(100, state.articles.filter((a) => !a.read && !a.dismissed && !a.kind).length),
+        };
     },
 
     // Espóileres que el usuario ya decidió ver.

@@ -20,9 +20,9 @@ export default function Resaltados({ onOpen }) {
 
     const all = useMemo(() => {
         const srcById = new Map(sources.map((s) => [s.id, s]));
-        const newest = (a) => Math.max(...a.highlights.map((h) => h.createdAt));
+        const newest = (a) => Math.max(0, ...(a.highlights || []).map((h) => h.createdAt));
         return articles
-            .filter((a) => a.highlights?.length)
+            .filter((a) => a.highlights?.length || a.note)
             .sort((a, b) => newest(b) - newest(a))
             .map((a) => ({ article: a, source: sourceOf(a, srcById) }));
     }, [articles, sources]);
@@ -31,20 +31,21 @@ export default function Resaltados({ onOpen }) {
     // de cada artículo solo quedan los resaltados que coinciden.
     const searching = query.trim().length > 0;
     const items = useMemo(() => {
-        if (!searching) return all.map((it) => ({ ...it, highlights: it.article.highlights }));
+        if (!searching) return all.map((it) => ({ ...it, highlights: it.article.highlights || [] }));
         return all
             .map((it) => {
-                const whole = matchesQuery(query, it.article.title, it.source?.title, ...(it.article.tags || []));
-                return { ...it, highlights: whole ? it.article.highlights : it.article.highlights.filter((h) => matchesQuery(query, h.text, h.note)) };
+                const whole = matchesQuery(query, it.article.title, it.article.note, it.source?.title, ...(it.article.tags || []));
+                const own = it.article.highlights || [];
+                return { ...it, whole, highlights: whole ? own : own.filter((h) => matchesQuery(query, h.text, h.note)) };
             })
-            .filter((it) => it.highlights.length);
+            .filter((it) => it.highlights.length || (it.whole && it.article.note));
     }, [all, query, searching]);
 
     const total = items.reduce((sum, it) => sum + it.highlights.length, 0);
     const exportAs = async (format) => {
         setExporting(false);
         // Se exporta lo que se ve: con una búsqueda puesta, solo lo encontrado.
-        const data = items.map(({ article, source, highlights }) => ({ title: article.title, url: article.url, source: source?.title, tags: article.tags, highlights }));
+        const data = items.map(({ article, source, highlights }) => ({ title: article.title, url: article.url, source: source?.title, tags: article.tags, note: article.note, highlights }));
         if (format === 'md') await exportFile('faro-resaltados.md', highlightsToMarkdown(data));
         else if (format === 'readwise') await exportFile('faro-readwise.csv', highlightsToReadwiseCsv(data));
         else await exportBinary('faro-obsidian.zip', bytesToBase64(makeZip(highlightsToObsidian(data))));
@@ -80,6 +81,7 @@ export default function Resaltados({ onOpen }) {
             <div className="rows">
                 {items.map(({ article, source, highlights }) => (
                     <button type="button" className="quote-card" key={article.id} onClick={() => onOpen(article.id, [article.id], 'Resaltados')}>
+                        {article.note && <span className="article-note">{article.note}</span>}
                         {highlights.map((h) => (
                             <span className="quote" key={h.id}>
                                 <q>{h.text}</q>

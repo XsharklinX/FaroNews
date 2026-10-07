@@ -3,6 +3,7 @@ import { actions, nextEditionCount, useStore } from '../data/store.js';
 import Icon from '../ui/Icon.jsx';
 import StoryRow, { StoryChips, StoryMeta } from '../ui/StoryRow.jsx';
 import { headline, minutesFor } from '../ui/look.js';
+import { EpubButton } from './Panorama.jsx';
 import TopBar, { TopIcons } from '../ui/TopBar.jsx';
 import { Thumb, useLongPress } from '../ui/bits.jsx';
 
@@ -242,6 +243,14 @@ export default function Hoy({ onOpen, onAdd, onCatalog, onTab, onWeek }) {
             <div className="end">
                 <b>Fin de la edición</b>
                 {view.pending.length === 1 ? 'Te queda una historia.' : `Te quedan ${view.pending.length} historias.`} Lo demás está en Explorar.
+                <EpubButton
+                    items={view.items}
+                    title="Hoy"
+                    subtitle={`${fecha} · ${view.items.length} historias`}
+                    file={`faro-hoy-${new Date().toISOString().slice(0, 10)}.epub`}
+                    label="Llevar la edición a tu lector de libros (EPUB)"
+                    className="link-btn"
+                />
             </div>
         </div>
     );

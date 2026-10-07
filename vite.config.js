@@ -16,7 +16,8 @@ const CSP = [
     "media-src 'self' https:",
     "connect-src 'self' https:",
     "object-src 'none'",
-    "frame-src 'none'",
+    // Solo el reproductor de YouTube en su modo de privacidad, para ver vídeos en el lector.
+    "frame-src https://www.youtube-nocookie.com",
     "base-uri 'self'",
 ].join('; ');
 

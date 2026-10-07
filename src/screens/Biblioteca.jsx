@@ -9,6 +9,8 @@ import TopBar from '../ui/TopBar.jsx';
 import { Monogram, Thumb } from '../ui/bits.jsx';
 import Lista from './Lista.jsx';
 import Resaltados from './Resaltados.jsx';
+import { EpubButton } from './Panorama.jsx';
+import { sourceOf } from '../data/store.js';
 
 const PANES = [
     { id: 'guardado', label: 'Guardado' },
@@ -83,8 +85,15 @@ function Cola({ onOpen }) {
 }
 
 export default function Biblioteca({ onOpen }) {
-    const { articles } = useStore();
+    const { articles, sources } = useStore();
     const { queue } = usePlayer();
+    const srcById = new Map(sources.map((s) => [s.id, s]));
+    // Lo guardado, lo más nuevo primero, para el libro electrónico (sin vídeos ni podcasts).
+    const saved = articles
+        .filter((a) => a.saved && !a.kind)
+        .sort((a, b) => (b.publishedAt || b.fetchedAt) - (a.publishedAt || a.fetchedAt))
+        .slice(0, 80)
+        .map((article) => ({ article, source: sourceOf(article, srcById) }));
     const [pane, setPane] = useState('guardado');
     const counts = {
         guardado: articles.filter((a) => a.saved).length,
@@ -103,7 +112,22 @@ export default function Biblioteca({ onOpen }) {
                     </button>
                 ))}
             </div>
-            {pane === 'guardado' && <Lista mode="guardado" onOpen={onOpen} />}
+            {pane === 'guardado' && (
+                <>
+                    <Lista mode="guardado" onOpen={onOpen} />
+                    {counts.guardado > 0 && (
+                        <div className="more">
+                            <EpubButton
+                                items={saved}
+                                title="Guardado en Faro"
+                                subtitle={`${saved.length} artículos`}
+                                file={`faro-guardado-${new Date().toISOString().slice(0, 10)}.epub`}
+                                label="Todo lo guardado como libro (EPUB)"
+                            />
+                        </div>
+                    )}
+                </>
+            )}
             {pane === 'resaltados' && <Resaltados onOpen={onOpen} />}
             {pane === 'cola' && <Cola onOpen={onOpen} />}
         </div>

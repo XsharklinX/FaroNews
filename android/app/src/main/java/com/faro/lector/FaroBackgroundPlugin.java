@@ -266,6 +266,15 @@ public class FaroBackgroundPlugin extends Plugin {
         call.resolve();
     }
 
+    /** Con `follow`, el texto de la app sigue el tamaño de letra elegido en Android. */
+    @PluginMethod
+    public void setTextZoom(PluginCall call) {
+        final boolean follow = Boolean.TRUE.equals(call.getBoolean("follow", false));
+        final float scale = getContext().getResources().getConfiguration().fontScale;
+        getActivity().runOnUiThread(() -> getBridge().getWebView().getSettings().setTextZoom(follow ? Math.round(scale * 100) : 100));
+        call.resolve();
+    }
+
     /** Pinta las barras del sistema del color de la pantalla que hay debajo. */
     @PluginMethod
     public void setBars(PluginCall call) {

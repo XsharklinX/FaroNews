@@ -18,7 +18,7 @@ import { ReadingOptions } from './Lector.jsx';
 
 const BUDGET_MB = 80;
 
-export default function Ajustes({ onClose, onNotify, onStats, onFeedback, onRules }) {
+export default function Ajustes({ onClose, onNotify, onStats, onFeedback, onRules, onTrip }) {
     const { sources, articles, settings, habits, refreshing, lastRefresh } = useStore();
     const fileRef = useRef(null);
     const backupRef = useRef(null);
@@ -116,6 +116,11 @@ export default function Ajustes({ onClose, onNotify, onStats, onFeedback, onRule
                 <section className="set-group">
                     <h3 className="set-label">Apariencia</h3>
                     <ThemePicker value={settings.theme} onChange={(theme) => actions.setSettings({ theme })} />
+                    {canTranslate && (
+                        <div className="set-list">
+                            <SwitchRow icon="editar" title="Tamaño de letra del teléfono" hint="Faro usa el tamaño de texto que elegiste en los ajustes de Android." checked={Boolean(settings.systemText)} onChange={(systemText) => actions.setSettings({ systemText })} />
+                        </div>
+                    )}
                 </section>
 
                 <section className="set-group">
@@ -182,6 +187,8 @@ export default function Ajustes({ onClose, onNotify, onStats, onFeedback, onRule
                             {backupNote || 'Lleva tus fuentes, temas, guardados y resaltados. Restaurar suma a lo que ya hay; la carpeta Documentos sobrevive a desinstalar Faro.'}
                         </p>
                     </Row>
+                    <Row icon="descarga" title="Llévatelo todo para un viaje" value="sin conexión" onClick={onTrip} />
+                    <SwitchRow icon="descarga" title="Ahorro de datos" hint="Con datos móviles, sin fotos ni descargas para leer sin conexión. Con wifi, todo normal." checked={settings.dataSaver !== false} onChange={(dataSaver) => actions.setSettings({ dataSaver })} />
                     <Row icon="descarga" title="Sin conexión" value={stats.count ? `${usedMb.toFixed(1)} MB` : 'vacío'}>
                         <div className="meter-bar" role="img" aria-label={`${usedMb.toFixed(1)} de ${BUDGET_MB} MB usados`}>
                             <i style={{ width: `${Math.min(100, (usedMb / BUDGET_MB) * 100)}%` }} />

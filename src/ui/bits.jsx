@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { initials } from '../core/text.js';
 import { localSrc } from '../ports/images.js';
+import { savingData } from '../ports/net.js';
 import Icon from './Icon.jsx';
 
 // Respaldo cuando aún no se ha buscado el logo del sitio (source.icon). Se pide
@@ -47,8 +48,11 @@ export function Monogram({ source, size = 40 }) {
 export function Thumb({ src, className }) {
     const [failed, setFailed] = useState(null);
     if (!src || failed === src) return null;
-    // Si hay copia en el teléfono se usa esa: funciona sin conexión.
-    return <img className={className} src={localSrc(src) || src} alt="" loading="lazy" decoding="async" onError={() => setFailed(src)} />;
+    // Si hay copia en el teléfono se usa esa: funciona sin conexión. Si no, con
+    // el ahorro de datos y en datos móviles, la foto no se descarga.
+    const local = localSrc(src);
+    if (!local && savingData()) return null;
+    return <img className={className} src={local || src} alt="" loading="lazy" decoding="async" onError={() => setFailed(src)} />;
 }
 
 export const LEVELS = [

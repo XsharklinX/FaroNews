@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { articleBlocks, articleToText, fileSlug } from '../core/export.js';
 import { storyTimeline } from '../core/extras2.js';
+import { youtubeEmbed, youtubeId } from '../core/extras3.js';
 import { applyHighlights } from '../core/highlight.js';
 import { localizeImages } from '../core/images.js';
 import { looksEnglish, translateHtml } from '../core/lang.js';
@@ -15,6 +16,9 @@ import { tap } from '../ports/haptics.js';
 import { localSrc } from '../ports/images.js';
 import { exportBinary, exportFile, openExternal, shareLink } from '../ports/share.js';
 import { QuoteSheet, WikiSheet } from './Hojas.jsx';
+import { NoteSheet } from './Panorama.jsx';
+import { whoTalks } from '../ports/gente.js';
+import { savingData } from '../ports/net.js';
 import Icon from '../ui/Icon.jsx';
 import { lengthLabel } from '../ui/StoryRow.jsx';
 import { Monogram, Sheet, Switch, Thumb } from '../ui/bits.jsx';
@@ -25,6 +29,7 @@ const SWIPE = 90;
 export const READER_FONTS = [
     { id: 'serif', label: 'Serif' },
     { id: 'sans', label: 'Sin serif' },
+    { id: 'dislexia', label: 'Para dislexia' },
 ];
 export const READER_MARGINS = [
     { id: 'normal', label: 'Normal' },
@@ -80,6 +85,27 @@ export function ReadingOptions({ preview = false }) {
                     <small>Más margen a los lados del texto.</small>
                 </span>
                 <Switch checked={reader.margin === 'ancho'} onChange={(on) => actions.setReader({ margin: on ? 'ancho' : 'normal' })} label="Columna estrecha" />
+            </div>
+            <div className="set-line">
+                <span>
+                    Pasar páginas
+                    <small>Como un libro: toca los bordes o desliza para pasar de página.</small>
+                </span>
+                <Switch checked={Boolean(reader.paged)} onChange={(paged) => actions.setReader({ paged })} label="Pasar páginas" />
+            </div>
+            <div className="set-line">
+                <span>
+                    Más espacio entre líneas y letras
+                    <small>Ayuda a leer con dislexia o con la vista cansada.</small>
+                </span>
+                <Switch checked={reader.spacing === 'amplio'} onChange={(on) => actions.setReader({ spacing: on ? 'amplio' : 'normal' })} label="Más espacio entre líneas y letras" />
+            </div>
+            <div className="set-line">
+                <span>
+                    Alto contraste
+                    <small>Todo el texto en el color más oscuro, y algo más grueso.</small>
+                </span>
+                <Switch checked={Boolean(reader.contrast)} onChange={(contrast) => actions.setReader({ contrast })} label="Alto contraste" />
             </div>
         </div>
     );
@@ -179,6 +205,12 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
     const [sending, setSending] = useState(false);
     // Nombre o término que el usuario quiere buscar en Wikipedia.
     const [lookup, setLookup] = useState('');
+    const [noting, setNoting] = useState(false);
+    // Qué dice la gente: null = sin pedir, 'cargando', o lo encontrado.
+    const [talk, setTalk] = useState(null);
+    const [videoOn, setVideoOn] = useState(false);
+    // Modo libro: página actual y total.
+    const [pages, setPages] = useState({ n: 1, total: 1 });
     // Resaltado que se está compartiendo como imagen.
     const [quoting, setQuoting] = useState(null);
     // Traducción: si se está viendo y si se está haciendo ahora.
@@ -219,6 +251,9 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
     useEffect(() => {
         setBody(null);
         setTranslated(false);
+        setTalk(null);
+        setVideoOn(false);
+        setPages({ n: 1, total: 1 });
     }, [id]);
     // Se vuelve a leer cuando llega el texto completo.
     useEffect(() => {
@@ -238,7 +273,9 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
         const base = (article.kind ? feedText : body.fullHtml || feedText).replace(/>\s*\d{4}-\d{2}-\d{2}T[\d:.+-]+Z?\s*</g, '><');
         // La traducción no lleva resaltados: están hechos sobre el texto original.
         if (translated && body.esHtml) return localizeImages(body.esHtml, localSrc);
-        return localizeImages(applyHighlights(base, article.highlights), localSrc);
+        const localized = localizeImages(applyHighlights(base, article.highlights), localSrc);
+        // Ahorro de datos: las fotos que no están en el teléfono esperan a que se toquen.
+        return savingData() ? localized.replace(/<img[^>]+src=["'](https:[^"']+)["'][^>]*>/gi, (all, src) => `<button type="button" class="load-img" data-src="${src}">Ver la foto</button>`) : localized;
     }, [article?.id, article?.kind, body, article?.highlights, imgTick, translated]);
     const [expanded, setExpanded] = useState(false);
     useEffect(() => setExpanded(false), [id]);
@@ -248,15 +285,25 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
     // Vuelve al punto donde se dejó un artículo a medias. Se repite si el texto
     // completo llega después, mientras el usuario no haya movido la página.
     const savedPos = article?.pos || 0;
+    const book = Boolean(settings.reader.paged) && !article?.kind;
     useEffect(() => {
         const el = scrollRef.current;
-        if (!el || pos.current.moved || savedPos < 0.05 || savedPos > 0.9) return undefined;
+        if (!el) return undefined;
         const frame = requestAnimationFrame(() => {
-            el.scrollTop = savedPos * (el.scrollHeight - el.clientHeight);
-            pos.current.auto = el.scrollTop;
+            // En modo libro se cuentan las páginas en cuanto el texto está puesto.
+            if (book) setPages({ n: Math.round(el.scrollLeft / el.clientWidth) + 1, total: Math.max(1, Math.round(el.scrollWidth / el.clientWidth)) });
+            if (pos.current.moved || savedPos < 0.05 || savedPos > 0.9) return;
+            if (book) {
+                const W = el.clientWidth;
+                el.scrollLeft = Math.round((savedPos * (el.scrollWidth - W)) / W) * W;
+                pos.current.auto = el.scrollLeft;
+            } else {
+                el.scrollTop = savedPos * (el.scrollHeight - el.clientHeight);
+                pos.current.auto = el.scrollTop;
+            }
         });
         return () => cancelAnimationFrame(frame);
-    }, [id, html, savedPos]);
+    }, [id, html, savedPos, book]);
 
     if (!article) return null;
 
@@ -266,12 +313,19 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
     const nextArticle = next ? articles.find((a) => a.id === next) : null;
     const reader = settings.reader;
 
+    const paged = Boolean(reader.paged) && !isMedia;
     const onScroll = (e) => {
         const el = e.currentTarget;
-        const max = el.scrollHeight - el.clientHeight;
-        const value = max > 0 ? Math.min(1, el.scrollTop / max) : 1;
+        if (paged) {
+            const total = Math.max(1, Math.round(el.scrollWidth / el.clientWidth));
+            const n = Math.min(total, Math.round(el.scrollLeft / el.clientWidth) + 1);
+            setPages({ n, total });
+        }
+        const max = paged ? el.scrollWidth - el.clientWidth : el.scrollHeight - el.clientHeight;
+        const at = paged ? el.scrollLeft : el.scrollTop;
+        const value = max > 0 ? Math.min(1, at / max) : 1;
         pos.current.value = value;
-        if (Math.abs(el.scrollTop - pos.current.auto) > 4) pos.current.moved = true;
+        if (Math.abs(at - pos.current.auto) > 4) pos.current.moved = true;
         setProgress(value);
     };
     const highlight = () => {
@@ -355,7 +409,38 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
             setTranslating(false);
         }
     };
+    // Modo libro: pasar a la página siguiente o a la anterior (y, en la última, a la historia siguiente).
+    const turn = (dir) => {
+        const el = scrollRef.current;
+        if (!el) return;
+        const W = el.clientWidth;
+        const target = Math.round(el.scrollLeft / W + dir) * W;
+        if (target > el.scrollWidth - W + 2) {
+            if (next) onNavigate(next);
+            return;
+        }
+        if (target < 0) {
+            if (prev) onNavigate(prev);
+            return;
+        }
+        el.scrollTo({ left: target, behavior: 'smooth' });
+    };
+    const onPageTap = (e) => {
+        if (!paged || selected || e.target.closest?.('a, button, mark, input, textarea, iframe')) return;
+        const box = e.currentTarget.getBoundingClientRect();
+        const x = (e.clientX - box.left) / box.width;
+        if (x < 0.3) turn(-1);
+        else if (x > 0.7) turn(1);
+    };
     const onProseClick = (e) => {
+        const photo = e.target.closest?.('.load-img');
+        if (photo) {
+            const img = document.createElement('img');
+            img.src = photo.getAttribute('data-src');
+            img.alt = '';
+            photo.replaceWith(img);
+            return;
+        }
         const link = e.target.closest?.('a[href]');
         if (link) {
             e.preventDefault();
@@ -380,10 +465,22 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
         const dx = e.changedTouches[0].clientX - start.x;
         const dy = e.changedTouches[0].clientY - start.y;
         if (Math.abs(dx) < SWIPE || Math.abs(dx) < Math.abs(dy) * 2) return;
+        if (paged) {
+            turn(dx < 0 ? 1 : -1);
+            return;
+        }
         const target = dx < 0 ? next : prev;
         if (target) {
             tap();
             onNavigate(target);
+        }
+    };
+    const askPeople = async () => {
+        setTalk('cargando');
+        try {
+            setTalk(await whoTalks(article.url));
+        } catch {
+            setTalk({ threads: [], comments: [], reddit: 'bloqueado', redditSearch: `https://www.reddit.com/search/?q=${encodeURIComponent(article.url)}` });
         }
     };
 
@@ -397,7 +494,7 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
     const tags = article.tags || [];
 
     return (
-        <div className="reader" data-theme={reader.theme} data-font={reader.font} data-margin={reader.margin}>
+        <div className="reader" data-theme={reader.theme} data-font={reader.font} data-margin={reader.margin} data-spacing={reader.spacing || 'normal'} data-contrast={reader.contrast ? 'si' : 'no'}>
             <div className="reader-bar">
                 <div style={{ width: `${progress * 100}%` }} />
             </div>
@@ -406,7 +503,9 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
                 <button type="button" className="round" aria-label="Volver" onClick={onClose}>
                     <Icon name="atras" size={22} strokeWidth={2} />
                 </button>
-                <span className="sub-s">{typeof linked === 'string' ? linked : linked ? 'Abierto desde un enlace' : index >= 0 && list.length > 1 ? `${index + 1} de ${list.length} en ${origin}` : ''}</span>
+                <span className="sub-s">
+                    {paged && pages.total > 1 ? `Página ${pages.n} de ${pages.total}` : typeof linked === 'string' ? linked : linked ? 'Abierto desde un enlace' : index >= 0 && list.length > 1 ? `${index + 1} de ${list.length} en ${origin}` : ''}
+                </span>
                 <button type="button" className="round" aria-label="Opciones de lectura" onClick={() => setOptions(true)}>
                     Aa
                 </button>
@@ -415,7 +514,7 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
                 </a>
             </div>
 
-            <div className="reader-scroll" ref={scrollRef} onScroll={onScroll} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} key={id}>
+            <div className={`reader-scroll${paged ? ' paged' : ''}`} ref={scrollRef} onScroll={onScroll} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} onClick={onPageTap} key={`${id}${paged ? 'p' : ''}`}>
                 <div className="story-meta">
                     <Monogram source={source} size={16} />
                     <span>
@@ -428,7 +527,7 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
                     <p className="reader-by">{[article.author ? `Por ${article.author}` : '', article.saved && article.archived ? 'Copia guardada en tu teléfono' : ''].filter(Boolean).join(' · ')}</p>
                 )}
 
-                {(english || article.saved) && (
+                {(
                     <div className="reader-chips">
                         {english && (
                             <button type="button" className="tab-chip" aria-pressed={translated} disabled={translating} onClick={translate}>
@@ -440,13 +539,45 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
                                 {tags.length ? tags.map((t) => `#${t}`).join(' ') : '+ Etiqueta'}
                             </button>
                         )}
+                        <button type="button" className="tab-chip" aria-pressed={Boolean(article.note)} onClick={() => setNoting(true)}>
+                            {article.note ? 'Tu nota' : '+ Nota'}
+                        </button>
                     </div>
                 )}
                 {translated && <p className="hint reader-note">Traducción automática hecha en tu teléfono. Puede tener errores.</p>}
 
                 {hero && <Thumb src={article.image} className="reader-hero" />}
 
-                {article.kind === 'video' && (
+                {article.kind === 'video' && youtubeId(article.url) && (
+                    <>
+                        {/* El vídeo se ve aquí, con el reproductor de YouTube en su modo de privacidad. */}
+                        {videoOn ? (
+                            <div className="video embed">
+                                <iframe src={`${youtubeEmbed(youtubeId(article.url))}&autoplay=1`} title={article.title} allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
+                            </div>
+                        ) : (
+                            <button type="button" className="video" onClick={() => setVideoOn(true)} aria-label="Ver el vídeo aquí">
+                                <Thumb src={article.image} className="video-img" />
+                                <span className="video-play">
+                                    <Icon name="play" size={30} filled />
+                                </span>
+                            </button>
+                        )}
+                        <div className="video-actions">
+                            {!videoOn && (
+                                <button type="button" className="btn-lamp" onClick={() => setVideoOn(true)}>
+                                    <Icon name="play" size={18} filled />
+                                    Ver aquí
+                                </button>
+                            )}
+                            <a className="btn-ghost" href={article.url} target="_blank" rel="noopener noreferrer">
+                                Abrir en YouTube
+                            </a>
+                        </div>
+                        {videoOn && <p className="hint">Si el vídeo no se reproduce aquí, su canal no lo permite fuera de YouTube: ábrelo en YouTube.</p>}
+                    </>
+                )}
+                {article.kind === 'video' && !youtubeId(article.url) && (
                     <>
                         <a className="video" href={article.url} target="_blank" rel="noopener noreferrer" aria-label={`Ver el vídeo en ${videoSite}`}>
                             <Thumb src={article.image} className="video-img" />
@@ -514,6 +645,43 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
                     </section>
                 )}
 
+                {/* Qué se comenta de este artículo en Hacker News y Reddit, solo si se pide. */}
+                {body && !isMedia && (
+                    <section className="people">
+                        <h2 className="label">Qué dice la gente</h2>
+                        {talk === null && (
+                            <button type="button" className="btn-ghost" onClick={askPeople}>
+                                Buscar comentarios en Reddit y Hacker News
+                            </button>
+                        )}
+                        {talk === 'cargando' && <p className="hint">Buscando…</p>}
+                        {talk && talk !== 'cargando' && (
+                            <>
+                                {talk.threads.length === 0 && <p className="hint">No encontramos a nadie comentando este artículo{talk.reddit === 'bloqueado' ? ' en Hacker News, y Reddit no respondió.' : '.'}</p>}
+                                {talk.threads.slice(0, 4).map((t) => (
+                                    <a key={`${t.where}${t.id}`} className="thread" href={t.url} target="_blank" rel="noopener noreferrer">
+                                        <b>{t.where}</b>
+                                        <span>
+                                            {t.comments} {t.comments === 1 ? 'comentario' : 'comentarios'} · {t.points} puntos
+                                        </span>
+                                    </a>
+                                ))}
+                                {talk.comments.map((c, i) => (
+                                    <blockquote key={i} className="comment">
+                                        <p>{c.text}</p>
+                                        <span>{c.author} en Hacker News</span>
+                                    </blockquote>
+                                ))}
+                                {talk.reddit === 'bloqueado' && (
+                                    <a className="link-btn" href={talk.redditSearch} target="_blank" rel="noopener noreferrer">
+                                        Buscarlo en Reddit
+                                    </a>
+                                )}
+                            </>
+                        )}
+                    </section>
+                )}
+
                 {/* Lectura continua: al terminar, la siguiente historia espera aquí. */}
                 {body && nextArticle && (
                     <button type="button" className="next-up" onClick={() => onNavigate(next)}>
@@ -576,6 +744,7 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
 
             {sending && <SendSheet onPick={send} onClose={() => setSending(false)} />}
             {lookup && <WikiSheet term={lookup} onClose={() => setLookup('')} />}
+            {noting && <NoteSheet article={article} onClose={() => setNoting(false)} />}
             {editing && (
                 <HighlightSheet
                     articleId={id}

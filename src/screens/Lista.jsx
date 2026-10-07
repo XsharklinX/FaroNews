@@ -20,7 +20,7 @@ const KINDS = [
 
 // `focus` cambia cuando hay que poner el cursor en el buscador (acceso directo
 // «Buscar» del icono).
-export default function Lista({ mode, topic, sourceId, onOpen, onClose, onEditSource, focus = 0 }) {
+export default function Lista({ mode, topic, sourceId, onOpen, onClose, onEditSource, focus = 0, onCovered, onWorld }) {
     const { sources, articles, settings, habits } = useStore();
     const [unreadOnly, setUnreadOnly] = useState(true);
     const [shown, setShown] = useState(PAGE);
@@ -104,6 +104,20 @@ export default function Lista({ mode, topic, sourceId, onOpen, onClose, onEditSo
     return (
         <div className="screen">
             {mode === 'todo' && <TopBar title="Explorar" note={count} />}
+
+            {/* Dos maneras de mirar el conjunto del día. */}
+            {mode === 'todo' && !searching && (
+                <div className="panorama">
+                    <button type="button" onClick={onCovered}>
+                        <strong>Lo más contado</strong>
+                        <span>Lo que más medios cuentan hoy</span>
+                    </button>
+                    <button type="button" onClick={onWorld}>
+                        <strong>El mundo hoy</strong>
+                        <span>Las noticias, por país</span>
+                    </button>
+                </div>
+            )}
 
             {onClose && (
                 <div className="head-row">

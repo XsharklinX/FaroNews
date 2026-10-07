@@ -55,10 +55,11 @@ export function applyHighlights(html, highlights) {
 // items: [{ title, url, source, highlights: [{ text, note }] }]
 export function highlightsToMarkdown(items) {
     const blocks = items
-        .filter((it) => it.highlights?.length)
+        .filter((it) => it.highlights?.length || it.note)
         .map((it) => {
-            const quotes = it.highlights.map((h) => `> ${h.text}${h.note ? `\n\n${h.note}` : ''}`).join('\n\n');
-            return `## [${it.title}](${it.url})\n\n${it.source ? `*${it.source}*\n\n` : ''}${quotes}`;
+            const quotes = (it.highlights || []).map((h) => `> ${h.text}${h.note ? `\n\n${h.note}` : ''}`).join('\n\n');
+            const note = it.note ? `**Nota:** ${it.note}\n\n` : '';
+            return `## [${it.title}](${it.url})\n\n${it.source ? `*${it.source}*\n\n` : ''}${note}${quotes}`.trim();
         });
     return `# Resaltados de Faro\n\n${blocks.join('\n\n---\n\n')}\n`;
 }
@@ -88,14 +89,15 @@ const noteName = (title) =>
 export function highlightsToObsidian(items) {
     const used = new Set();
     return items
-        .filter((it) => it.highlights?.length)
+        .filter((it) => it.highlights?.length || it.note)
         .map((it) => {
             let name = noteName(it.title);
             for (let n = 2; used.has(name.toLowerCase()); n++) name = `${noteName(it.title)} ${n}`;
             used.add(name.toLowerCase());
             const tags = ['faro', ...(it.tags || [])].map((t) => t.replace(/\s+/g, '-'));
             const head = ['---', `fuente: ${JSON.stringify(it.source || '')}`, `url: ${it.url}`, `etiquetas: [${tags.join(', ')}]`, '---'];
-            const quotes = it.highlights.map((h) => `> ${h.text.replace(/\n+/g, ' ')}${h.note ? `\n\n${h.note}` : ''}`);
+            const quotes = (it.highlights || []).map((h) => `> ${h.text.replace(/\n+/g, ' ')}${h.note ? `\n\n${h.note}` : ''}`);
+            if (it.note) quotes.unshift(`## Nota\n\n${it.note}`);
             return { name: `${name}.md`, text: `${head.join('\n')}\n\n# ${it.title}\n\n[Artículo original](${it.url})\n\n${quotes.join('\n\n')}\n` };
         });
 }
