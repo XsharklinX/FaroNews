@@ -2,6 +2,7 @@
 // el usuario. Todo se calcula en el teléfono.
 
 import { norm } from './text.js';
+import { affinity, matchKeyword, matchTopic, topicsOf } from './today.js';
 import { urlKey } from './url.js';
 
 const DAY = 86400000;
@@ -80,4 +81,37 @@ export function bodyMatches(query, body) {
     if (!words.length) return false;
     const text = norm(String(body?.fullHtml || body?.contentHtml || '').replace(/<[^>]+>/g, ' '));
     return words.every((w) => text.includes(w));
+}
+
+const WEEK = 7 * 86400000;
+const PER_SOURCE = 2;
+
+// Resumen de la semana: lo mejor que quedó sin leer en los últimos siete días.
+// Puntúa cada historia por lo que el usuario suele hacer con su fuente, por si
+// toca uno de sus temas y por si la fuente es prioritaria; como mucho dos de
+// cada sitio, para que no lo llene el que más publica.
+export function weeklyPicks({ articles, sources, settings, habits = {}, skip = new Set(), now = Date.now(), limit = 10 }) {
+    const srcById = new Map(sources.map((s) => [s.id, s]));
+    const topics = topicsOf(settings);
+    const muted = settings?.muted || [];
+    const scored = articles
+        .filter((a) => srcById.has(a.sourceId) && !a.read && !a.dismissed && !a.kind && !skip.has(a.id))
+        .filter((a) => now - (a.publishedAt || a.fetchedAt || 0) <= WEEK)
+        .filter((a) => !matchKeyword(a, muted))
+        .map((a) => {
+            const source = srcById.get(a.sourceId);
+            const score = affinity(habits[a.sourceId]) * 10 + (matchTopic(a, topics) ? 8 : 0) + (source.priority ? 4 : 0) + (a.image ? 1 : 0) + Math.min(3, (a.minutes || 0) / 4);
+            return { article: a, source, score };
+        })
+        .sort((a, b) => b.score - a.score || (b.article.publishedAt || 0) - (a.article.publishedAt || 0));
+    const used = new Map();
+    const out = [];
+    for (const item of scored) {
+        const n = used.get(item.source.id) || 0;
+        if (n >= PER_SOURCE) continue;
+        used.set(item.source.id, n + 1);
+        out.push(item);
+        if (out.length >= limit) break;
+    }
+    return out;
 }

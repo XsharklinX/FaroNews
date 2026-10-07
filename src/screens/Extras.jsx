@@ -1,12 +1,15 @@
 // Pantallas pequeñas: bandeja de avisos, estadísticas de lectura y la guía de gestos.
 
 import { useEffect, useMemo } from 'react';
-import { readingStats } from '../core/insights.js';
+import { readingStats, weeklyPicks } from '../core/insights.js';
+import { effective } from '../core/pause.js';
+import { paceFactor } from '../core/extras2.js';
 import { agoLabel } from '../core/text.js';
 import { urlKey } from '../core/url.js';
 import { actions, useStore } from '../data/store.js';
 import { canNotify } from '../ports/background.js';
 import Icon from '../ui/Icon.jsx';
+import StoryRow from '../ui/StoryRow.jsx';
 import { Monogram } from '../ui/bits.jsx';
 
 function Shell({ title, sub, onClose, children }) {
@@ -91,8 +94,51 @@ export function Bandeja({ onClose, onNotify }) {
     );
 }
 
-export function Estadisticas({ onClose }) {
-    const { articles, sources } = useStore();
+// Resumen de la semana: cómo fue y lo mejor que quedó sin leer.
+export function Semana({ onClose, onOpen }) {
+    const { articles, sources, settings, habits, today } = useStore();
+    const stats = useMemo(() => readingStats(articles, sources), [articles, sources]);
+    const picks = useMemo(() => weeklyPicks({ articles, habits, skip: new Set(today.items.map((it) => it.id)), ...effective({ sources, settings }) }), [articles, sources, settings, habits, today]);
+    const order = picks.map((p) => p.article.id);
+    const minutes = picks.reduce((sum, p) => sum + (p.article.minutes || 0), 0);
+
+    return (
+        <Shell title="Tu semana" sub={stats.count ? `Leíste ${stats.count} ${stats.count === 1 ? 'historia' : 'historias'} en ${stats.minutes} min.` : 'Esta semana no has leído nada en Faro.'} onClose={onClose}>
+            <div className="bars week" role="img" aria-label={stats.days.map((d) => `${d.label}: ${d.count}`).join(', ')}>
+                {stats.days.map((d, i) => (
+                    <div className="bar-col" key={i}>
+                        <span className="bar-n">{d.count || ''}</span>
+                        <span className={`bar-fill${i === 6 ? ' today' : ''}${d.count ? '' : ' zero'}`} style={{ height: `${Math.max(d.count ? 6 : 2, (d.count / stats.best) * 100)}%` }} />
+                        <span className="bar-l">{d.label}</span>
+                    </div>
+                ))}
+            </div>
+
+            <section className="block">
+                <h3 className="label">Lo que te quedó</h3>
+                {picks.length > 0 ? (
+                    <>
+                        <p className="hint">
+                            {picks.length} {picks.length === 1 ? 'historia' : 'historias'} de estos siete días que encajan contigo · {minutes} min. Como mucho dos por sitio.
+                        </p>
+                        <div className="rows">
+                            {picks.map(({ article, source }) => (
+                                <StoryRow key={article.id} article={article} source={source} onOpen={() => onOpen(article.id, order, 'Tu semana')} />
+                            ))}
+                        </div>
+                    </>
+                ) : (
+                    <p className="empty-note">No te quedó nada pendiente de esta semana.</p>
+                )}
+            </section>
+        </Shell>
+    );
+}
+
+export function Estadisticas({ onClose, onWeek }) {
+    const { articles, sources, settings } = useStore();
+    const pace = paceFactor(settings.pace);
+    const reads = (settings.pace || []).length;
     const stats = useMemo(() => readingStats(articles, sources), [articles, sources]);
     // Días seguidos leyendo, contando hacia atrás desde hoy.
     const streak = [...stats.days].reverse().findIndex((d) => !d.count);
@@ -159,6 +205,23 @@ export function Estadisticas({ onClose }) {
                         </section>
                     )
             )}
+
+            <section className="block">
+                <h3 className="label">Tu ritmo</h3>
+                <p className="hint">
+                    {reads < 5
+                        ? `Faro aún está aprendiendo a qué velocidad lees (${reads} de 5 lecturas completas). Después, los minutos de cada historia serán los tuyos.`
+                        : pace < 0.95
+                          ? `Lees un ${Math.round((1 / pace - 1) * 100)} % más rápido que la media. Los minutos de cada historia ya están a tu ritmo.`
+                          : pace > 1.05
+                            ? `Te tomas un ${Math.round((pace - 1) * 100)} % más de tiempo que la media. Los minutos de cada historia ya están a tu ritmo.`
+                            : 'Lees a la velocidad media. Los minutos de cada historia ya están a tu ritmo.'}
+                </p>
+            </section>
+
+            <button type="button" className="btn-ghost" onClick={onWeek}>
+                Ver lo que te quedó esta semana
+            </button>
 
             {stats.count === 0 && <p className="empty-note">Aún no hay lecturas que contar. Faro empieza a apuntarlas desde esta versión.</p>}
         </Shell>

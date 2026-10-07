@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { articleBlocks, articleToText, fileSlug } from '../core/export.js';
+import { storyTimeline } from '../core/extras2.js';
 import { applyHighlights } from '../core/highlight.js';
 import { localizeImages } from '../core/images.js';
 import { looksEnglish, translateHtml } from '../core/lang.js';
@@ -13,6 +14,7 @@ import { canTranslate, translateTexts } from '../ports/background.js';
 import { tap } from '../ports/haptics.js';
 import { localSrc } from '../ports/images.js';
 import { exportBinary, exportFile, openExternal, shareLink } from '../ports/share.js';
+import { QuoteSheet, WikiSheet } from './Hojas.jsx';
 import Icon from '../ui/Icon.jsx';
 import { lengthLabel } from '../ui/StoryRow.jsx';
 import { Monogram, Sheet, Switch, Thumb } from '../ui/bits.jsx';
@@ -83,7 +85,7 @@ export function ReadingOptions({ preview = false }) {
     );
 }
 
-function HighlightSheet({ articleId, highlight, onClose }) {
+function HighlightSheet({ articleId, highlight, onClose, onShare }) {
     const [note, setNote] = useState(highlight.note || '');
     return (
         <Sheet title="Resaltado" onClose={onClose}>
@@ -101,6 +103,9 @@ function HighlightSheet({ articleId, highlight, onClose }) {
                 }}
             >
                 Guardar nota
+            </button>
+            <button type="button" className="btn-ghost" onClick={onShare}>
+                Compartir como imagen
             </button>
             <button
                 type="button"
@@ -172,6 +177,10 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
     const [editing, setEditing] = useState(null);
     const [options, setOptions] = useState(false);
     const [sending, setSending] = useState(false);
+    // Nombre o término que el usuario quiere buscar en Wikipedia.
+    const [lookup, setLookup] = useState('');
+    // Resaltado que se está compartiendo como imagen.
+    const [quoting, setQuoting] = useState(null);
     // Traducción: si se está viendo y si se está haciendo ahora.
     const [translated, setTranslated] = useState(false);
     const [translating, setTranslating] = useState(false);
@@ -186,9 +195,13 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
         scrollRef.current?.scrollTo(0, 0);
         setProgress(0);
         setSelected('');
-        // Al salir del artículo se guarda hasta dónde se llegó.
+        const openedAt = Date.now();
+        const estimate = article?.kind ? 0 : article?.minutes || 0;
+        // Al salir del artículo se guarda hasta dónde se llegó y, si se leyó
+        // entero, cuánto se tardó frente a lo estimado (para «a tu ritmo»).
         return () => {
             if (pos.current.moved) actions.setPosition(id, pos.current.value);
+            if (estimate >= 2 && pos.current.value >= 0.85) actions.recordPace((Date.now() - openedAt) / 60000 / estimate);
         };
     }, [id]);
 
@@ -377,6 +390,9 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
     const meta = [agoLabel(article.publishedAt || article.fetchedAt), article.kind ? lengthLabel(article) : `${article.minutes} min de lectura`].filter(Boolean).join(' · ');
     // La foto del artículo abre el texto, salvo que el texto ya empiece con una.
     const hero = !isMedia && article.image && html && !/<img/i.test(html.slice(0, 1500));
+    const timeline = useMemo(() => (article && !article.kind ? storyTimeline(article, articles) : []), [article?.id, articles]);
+    // Una selección de una a cinco palabras parece un nombre o un término.
+    const short = selected.trim().length >= 3 && selected.trim().length <= 60 && selected.trim().split(/\s+/).length <= 5;
     const english = canTranslate && !isMedia && Boolean(body) && looksEnglish(`${article.title}. ${article.summary || ''}`);
     const tags = article.tags || [];
 
@@ -475,6 +491,29 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
                     </button>
                 )}
 
+                {/* Lo que tus fuentes publicaron antes sobre lo mismo. */}
+                {body && timeline.length > 0 && (
+                    <section className="history">
+                        <h2 className="label">Cómo llegamos aquí</h2>
+                        <ol className="tl-list">
+                            <li className="now">
+                                <span className="sub-s">{agoLabel(article.publishedAt || article.fetchedAt) || 'Ahora'}</span>
+                                <span className="tl-title">Esta noticia</span>
+                            </li>
+                            {timeline.map((past) => (
+                                <li key={past.id}>
+                                    <button type="button" onClick={() => onLink(past.id)}>
+                                        <span className="sub-s">
+                                            {agoLabel(past.publishedAt || past.fetchedAt)} · {sources.find((s) => s.id === past.sourceId)?.title || past.site}
+                                        </span>
+                                        <span className="tl-title">{past.title}</span>
+                                    </button>
+                                </li>
+                            ))}
+                        </ol>
+                    </section>
+                )}
+
                 {/* Lectura continua: al terminar, la siguiente historia espera aquí. */}
                 {body && nextArticle && (
                     <button type="button" className="next-up" onClick={() => onNavigate(next)}>
@@ -506,6 +545,20 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
                     <Icon name="resaltar" size={selected ? 18 : 22} strokeWidth={1.8} />
                     {selected && 'Resaltar'}
                 </button>
+                {/* Un nombre o un término corto seleccionado: se puede buscar en Wikipedia. */}
+                {short && (
+                    <button
+                        type="button"
+                        className="ract live"
+                        onPointerDown={(e) => {
+                            e.preventDefault();
+                            setLookup(selected.trim());
+                        }}
+                        onClick={() => setLookup(selected.trim())}
+                    >
+                        ¿Quién es?
+                    </button>
+                )}
                 <button type="button" className="ract" aria-label="Enviar" onClick={() => setSending(true)}>
                     <Icon name="compartir" strokeWidth={1.8} />
                 </button>
@@ -522,7 +575,19 @@ export default function Lector({ id, list, origin, linked = false, onClose, onNa
             </div>
 
             {sending && <SendSheet onPick={send} onClose={() => setSending(false)} />}
-            {editing && <HighlightSheet articleId={id} highlight={editing} onClose={() => setEditing(null)} />}
+            {lookup && <WikiSheet term={lookup} onClose={() => setLookup('')} />}
+            {editing && (
+                <HighlightSheet
+                    articleId={id}
+                    highlight={editing}
+                    onClose={() => setEditing(null)}
+                    onShare={() => {
+                        setQuoting(editing);
+                        setEditing(null);
+                    }}
+                />
+            )}
+            {quoting && <QuoteSheet text={quoting.text} title={article.title} source={source?.title} onClose={() => setQuoting(null)} />}
             {options && (
                 <Sheet title="Lectura" subtitle="Se aplica a todos los artículos." onClose={() => setOptions(false)}>
                     <ReadingOptions />

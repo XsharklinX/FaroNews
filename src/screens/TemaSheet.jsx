@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { isPaused, pauseLabel } from '../core/pause.js';
 import { actions } from '../data/store.js';
 import { Sheet, Switch } from '../ui/bits.jsx';
 import { TagEditor } from '../ui/settings.jsx';
@@ -9,9 +10,10 @@ export default function TemaSheet({ topic, onClose }) {
     const [name, setName] = useState(topic.name || '');
     const [words, setWords] = useState(topic.words || []);
     const [notify, setNotify] = useState(topic.notify !== false);
+    const [web, setWeb] = useState(Boolean(topic.web));
 
     const save = () => {
-        actions.saveTopic({ ...topic, name, words: words.length ? words : [name.trim()], notify });
+        actions.saveTopic({ ...topic, name, words: words.length ? words : [name.trim()], notify, web });
         onClose();
     };
 
@@ -37,11 +39,31 @@ export default function TemaSheet({ topic, onClose }) {
                     </span>
                     <Switch checked={notify} onChange={setNotify} label="Avisarme de este tema" />
                 </div>
+                <div className="opt opt-tall">
+                    <span>
+                        Buscar también en toda la web
+                        <small>Trae lo que publique cualquier medio, aunque no lo sigas. Usa Bing Noticias.</small>
+                    </span>
+                    <Switch checked={web} onChange={setWeb} label="Buscar también en toda la web" />
+                </div>
             </div>
 
             <button type="button" className="btn-lamp btn-big" onClick={save} disabled={!name.trim()}>
                 {isNew ? 'Seguir este tema' : 'Guardar cambios'}
             </button>
+            {!isNew && (
+                <button
+                    type="button"
+                    className="btn-ghost"
+                    onClick={() => {
+                        onClose();
+                        if (isPaused(topic.pausedUntil)) actions.pause({ kind: 'topic', key: topic.id, label: topic.name }, 0);
+                        else actions.openPause({ kind: 'topic', key: topic.id, label: topic.name });
+                    }}
+                >
+                    {isPaused(topic.pausedUntil) ? `En pausa ${pauseLabel(topic.pausedUntil)} · Reanudar` : 'Silenciar un tiempo'}
+                </button>
+            )}
             {!isNew && (
                 <button
                     type="button"

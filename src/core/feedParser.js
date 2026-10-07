@@ -36,9 +36,12 @@ export function durationMinutes(value) {
     return seconds > 0 ? Math.max(1, Math.round(seconds / 60)) : null;
 }
 
+import { unwrapRedirect } from './extras2.js';
+
 function makeItem({ url, title, contentHtml, author, date, image, audio, duration }, baseUrl) {
     // Un episodio de podcast a veces no tiene página propia: vale su audio.
-    const link = resolveUrl(url || audio, baseUrl);
+    // Los buscadores de noticias enlazan a través de su contador de clics.
+    const link = unwrapRedirect(resolveUrl(url || audio, baseUrl));
     if (!link || !/^https?:/i.test(link)) return null;
     const text = htmlToText(contentHtml);
     const audioUrl = audio ? resolveUrl(audio, baseUrl) : '';
@@ -88,7 +91,8 @@ function parseRss(root, baseUrl) {
                         url: txt(item, 'link') || (guidIsLink ? guid.textContent : ''),
                         title: txt(item, 'title'),
                         contentHtml: txt(item, 'content:encoded', 'description'),
-                        author: txt(item, 'dc:creator', 'author'),
+                        // En las búsquedas de Bing Noticias, el medio que publica.
+                        author: txt(item, 'dc:creator', 'author', 'news:source'),
                         date: txt(item, 'pubdate', 'dc:date'),
                         image: mediaImage(item) || kid(item, 'itunes:image')?.getAttribute('href') || (sound ? cover : ''),
                         audio: sound?.getAttribute('url') || '',

@@ -4,7 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 
-const TYPES = { zip: 'application/zip', csv: 'text/csv', json: 'application/json', md: 'text/markdown', txt: 'text/plain', pdf: 'application/pdf', opml: 'text/xml' };
+const TYPES = { png: 'image/png', zip: 'application/zip', csv: 'text/csv', json: 'application/json', md: 'text/markdown', txt: 'text/plain', pdf: 'application/pdf', opml: 'text/xml' };
 const typeOf = (name) => TYPES[name.split('.').pop()] || 'text/plain';
 
 export async function shareLink({ title, url }) {

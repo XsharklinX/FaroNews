@@ -1,6 +1,6 @@
 {
   "name": "faro",
-  "version": "0.8.1",
+  "version": "0.10.0",
   "description": "Faro para Android: noticias de los sitios que te importan, local-first, sin cuenta y sin servidor",
   "author": "David Bonilla",
   "license": "ISC",

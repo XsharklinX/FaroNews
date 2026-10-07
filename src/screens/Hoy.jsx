@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { actions, nextEditionCount, useStore } from '../data/store.js';
 import Icon from '../ui/Icon.jsx';
 import StoryRow, { StoryChips, StoryMeta } from '../ui/StoryRow.jsx';
+import { headline, minutesFor } from '../ui/look.js';
 import TopBar, { TopIcons } from '../ui/TopBar.jsx';
 import { Thumb, useLongPress } from '../ui/bits.jsx';
 
@@ -45,24 +46,27 @@ function Lighthouse() {
 // La historia que abre la edición: foto grande, titular y entradilla.
 function Lead({ lead, also, onOpen }) {
     const press = useLongPress(() => actions.openMenu(lead.id));
+    const { revealed } = useStore();
     const { article } = lead;
+    const head = headline(article, revealed);
     return (
-        <article className={`lead${article.read ? ' is-read' : ''}`} {...press.handlers}>
-            <button type="button" className="lead-main" onClick={() => !press.guard() && onOpen(lead.id)}>
+        <article className={`lead${article.read ? ' is-read' : ''}${head.spoiler ? ' spoiler' : ''}`} {...press.handlers}>
+            <button type="button" className="lead-main" onClick={() => !press.guard() && (head.spoiler ? actions.reveal(lead.id) : onOpen(lead.id))}>
                 <Thumb src={article.image} className="lead-img" />
-                <h2>{article.title}</h2>
-                {article.summary && <p className="lead-deck">{article.summary}</p>}
-                <StoryMeta article={article} source={lead.source} reason={lead.reason} />
+                <h2>{head.title}</h2>
+                {article.summary && !head.spoiler && <p className="lead-deck">{article.summary}</p>}
+                <StoryMeta article={article} source={lead.source} reason={lead.reason} note={head.note} />
             </button>
             <StoryChips article={article} also={also} />
         </article>
     );
 }
 
-export default function Hoy({ onOpen, onAdd, onCatalog, onTab }) {
+export default function Hoy({ onOpen, onAdd, onCatalog, onTab, onWeek }) {
     const { sources, articles, today, refreshing } = useStore();
     const edition = today.edition || 1;
     const afternoon = new Date().getHours() >= AFTERNOON;
+    const sunday = new Date().getDay() === 0;
 
     const view = useMemo(() => {
         const byId = new Map(articles.map((a) => [a.id, a]));
@@ -80,7 +84,7 @@ export default function Hoy({ onOpen, onAdd, onCatalog, onTab }) {
             items,
             pending,
             done: items.length - pending.length,
-            minutes: pending.reduce((sum, it) => sum + it.article.minutes, 0),
+            minutes: pending.reduce((sum, it) => sum + minutesFor(it.article), 0),
             waiting: articles.filter((a) => !a.read && !a.dismissed).length,
             // Lo que traería la edición de tarde; solo se mira cuando puede salir.
             nextEdition: edition === 1 && afternoon && sources.length ? nextEditionCount() : 0,
@@ -127,6 +131,17 @@ export default function Hoy({ onOpen, onAdd, onCatalog, onTab }) {
                             </div>
                             <button type="button" className="btn-lamp" onClick={actions.nextEdition}>
                                 Abrir
+                            </button>
+                        </div>
+                    )}
+                    {sunday && (
+                        <div className="night-card">
+                            <div>
+                                <strong>Resumen de la semana</strong>
+                                <span>Cómo fue y lo mejor que te quedó sin leer.</span>
+                            </div>
+                            <button type="button" className="btn-night" onClick={onWeek}>
+                                Ver
                             </button>
                         </div>
                     )}
@@ -190,6 +205,16 @@ export default function Hoy({ onOpen, onAdd, onCatalog, onTab }) {
             <div className="prog" role="img" aria-label={`${view.done} de ${view.items.length} leídas`}>
                 <i style={{ width: `${(view.done / view.items.length) * 100}%` }} />
             </div>
+
+            {sunday && (
+                <button type="button" className="cat-entry week-entry" onClick={onWeek}>
+                    <span>
+                        <strong>Resumen de la semana</strong>
+                        <small>Cómo fue y lo mejor que te quedó sin leer</small>
+                    </span>
+                    <Icon name="siguiente" size={20} />
+                </button>
+            )}
 
             <Lead lead={lead} also={lead.also} onOpen={open} />
 

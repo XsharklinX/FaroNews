@@ -74,7 +74,7 @@ export default function AnadirSheet({ onClose, initialUrl = '' }) {
                 <label htmlFor="url-sitio" className="sr">
                     Dirección del sitio
                 </label>
-                <input id="url-sitio" type="text" inputMode="url" autoCapitalize="none" autoCorrect="off" placeholder="Un sitio, canal de YouTube, perfil o podcast" value={url} onChange={(e) => setUrl(e.target.value)} />
+                <input id="url-sitio" type="text" inputMode="url" autoCapitalize="none" autoCorrect="off" placeholder="Un sitio, canal de YouTube o de Telegram, podcast…" value={url} onChange={(e) => setUrl(e.target.value)} />
                 {url.trim() ? (
                     <button type="submit" className="btn-go" disabled={busy}>
                         {busy ? 'Buscando…' : 'Buscar'}

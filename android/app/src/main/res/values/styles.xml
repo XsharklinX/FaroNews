@@ -22,4 +22,18 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_faro_foreground</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
+
+    <!-- Un titular del widget de Hoy. -->
+    <style name="WidgetLine">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">9dp</item>
+        <item name="android:fontFamily">serif</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:lineSpacingMultiplier">1.05</item>
+        <item name="android:textColor">@color/widget_ink</item>
+    </style>
 </resources>

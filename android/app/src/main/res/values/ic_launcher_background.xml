@@ -3,4 +3,9 @@
     <color name="ic_launcher_background">#0F1B33</color>
     <!-- Fondo de la ventana: se ve tras las barras del sistema. Igual que el token bg de app.css. -->
     <color name="faro_bg">#FFFFFF</color>
+    <!-- Widget de Hoy: los mismos tonos que la app en claro. -->
+    <color name="widget_bg">#FFFFFF</color>
+    <color name="widget_ink">#0E1116</color>
+    <color name="widget_ink2">#5E6672</color>
+    <color name="widget_ink3">#8D949E</color>
 </resources>

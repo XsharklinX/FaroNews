@@ -101,13 +101,16 @@ export const onShortcut = (callback) => listen('shortcut', () => Native.consumeS
 // Aviso que el usuario tocó: { url, feed }. Sin url = abrir las novedades del sitio.
 export const onNotificationOpen = (callback) => listen('opened', () => Native.consumeOpen().then((res) => res?.open), callback);
 
-// Noticias guardadas desde un aviso con la app cerrada: [{ url, feed }].
-export async function takeSavedFromNotifications() {
-    if (!canNotify) return [];
+// Lo que el usuario pidió desde los botones de un aviso con la app cerrada:
+// noticias que guardar o dar por leídas ([{ url, feed }]) y temas que callar
+// una semana ([{ topic, at }]).
+export async function takeNotificationActions() {
+    const none = { saves: [], reads: [], mutes: [] };
+    if (!canNotify) return none;
     try {
-        return (await Native.consumeSaves()).saves || [];
+        return { ...none, ...(await Native.consumeSaves()) };
     } catch {
-        return [];
+        return none;
     }
 }
 
@@ -147,6 +150,11 @@ export async function deviceInfo() {
 // Traducción inglés → español hecha en el teléfono. La primera vez descarga
 // el idioma; si no puede, lanza un error con el mensaje 'MODEL'.
 export const canTranslate = canNotify;
-export async function translateTexts(texts) {
-    return (await Native.translate({ texts })).texts;
+export async function translateTexts(texts, { wifiOnly = false } = {}) {
+    return (await Native.translate({ texts, wifiOnly })).texts;
+}
+
+// Lo que enseña el widget de la pantalla de inicio.
+export function setWidget(data) {
+    if (canNotify) Native.setWidget(data).catch(() => {});
 }

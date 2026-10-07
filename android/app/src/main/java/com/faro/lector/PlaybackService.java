@@ -95,6 +95,8 @@ public class PlaybackService extends Service {
             .setShowWhen(false)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
+            // Con la sesión de medios, los controles salen también en la pantalla de bloqueo.
+            .setStyle(new androidx.media.app.NotificationCompat.MediaStyle().setMediaSession(MediaHub.session(this).getSessionToken()).setShowActionsInCompactView(0, 1, 2))
             .addAction(0, "−15 s", tap(ACTION_BACK, 1))
             .addAction(0, playing ? "Pausar" : "Seguir", tap(ACTION_TOGGLE, 2))
             .addAction(0, "+30 s", tap(ACTION_FORWARD, 3))

@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 import { suggestSites } from '../core/insights.js';
+import { isPaused, pauseLabel } from '../core/pause.js';
 import { relTime } from '../core/text.js';
 import { matchTopic, topicWords } from '../core/today.js';
 import { actions, isFailing, useStore } from '../data/store.js';
 import Icon from '../ui/Icon.jsx';
 import TopBar from '../ui/TopBar.jsx';
+import { Paginas } from './Vigilar.jsx';
 import { Monogram } from '../ui/bits.jsx';
 
 const LEVEL_TEXT = { todo: 'Entra todo', importante: 'Solo lo importante', alertas: 'Solo tus temas' };
@@ -15,7 +17,7 @@ function pace(source) {
     return source.perWeek >= 7 ? `${Math.round(source.perWeek / 7)} al día` : `${source.perWeek} por semana`;
 }
 
-export default function Fuentes({ onCatalog, onEdit, onTopicEdit, onTopicOpen }) {
+export default function Fuentes({ onCatalog, onEdit, onTopicEdit, onTopicOpen, onWatch }) {
     const { sources, articles, settings, catalog } = useStore();
     const [pane, setPane] = useState('sitios');
 
@@ -49,6 +51,10 @@ export default function Fuentes({ onCatalog, onEdit, onTopicEdit, onTopicOpen })
                 <button type="button" aria-pressed={pane === 'temas'} onClick={() => setPane('temas')}>
                     Temas {topics.length || ''}
                 </button>
+                <button type="button" aria-pressed={pane === 'paginas'} onClick={() => setPane('paginas')}>
+                    Páginas {(settings.watches || []).length || ''}
+                    {(settings.watches || []).some((w) => w.changedAt && !w.seen) && <span className="dot tab-dot" />}
+                </button>
             </div>
 
             {pane === 'sitios' && (
@@ -67,6 +73,8 @@ export default function Fuentes({ onCatalog, onEdit, onTopicEdit, onTopicOpen })
                                                 <strong>{source.title}</strong>
                                                 {isFailing(source) ? (
                                                     <span className="warn">Sin respuesta{source.lastOkAt ? ` desde hace ${relTime(source.lastOkAt)}` : ''}</span>
+                                                ) : isPaused(source.pausedUntil) ? (
+                                                    <span className="clip">En pausa {pauseLabel(source.pausedUntil)}</span>
                                                 ) : (
                                                     <span className="clip">{[LEVEL_TEXT[source.level] || LEVEL_TEXT.todo, pace(source), source.priority ? 'prioritaria' : ''].filter(Boolean).join(' · ')}</span>
                                                 )}
@@ -126,6 +134,8 @@ export default function Fuentes({ onCatalog, onEdit, onTopicEdit, onTopicOpen })
                 </>
             )}
 
+            {pane === 'paginas' && <Paginas onAdd={onWatch} />}
+
             {pane === 'temas' && (
                 <>
                     {topics.length > 0 && (
@@ -136,7 +146,7 @@ export default function Fuentes({ onCatalog, onEdit, onTopicEdit, onTopicOpen })
                                         <span className="topic-mark">#</span>
                                         <span className="src-text">
                                             <strong>{t.name}</strong>
-                                            <span className="clip">{topicWords(t).join(', ')}</span>
+                                            <span className="clip">{isPaused(t.pausedUntil) ? `En pausa ${pauseLabel(t.pausedUntil)}` : topicWords(t).join(', ')}</span>
                                         </span>
                                         <span className={`src-count${topicCounts.get(t.id) ? '' : ' zero'}`}>{topicCounts.get(t.id)}</span>
                                     </button>

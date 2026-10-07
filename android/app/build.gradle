@@ -80,6 +80,8 @@ dependencies {
     implementation "androidx.work:work-runtime:2.10.0"
     // Traducción inglés → español dentro del teléfono.
     implementation "com.google.mlkit:translate:17.0.3"
+    // Sesión de medios: controles en la pantalla de bloqueo y Android Auto.
+    implementation "androidx.media:media:1.7.0"
     implementation project(':capacitor-android')
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"

@@ -35,10 +35,12 @@ function set(patch) {
 let announced = '';
 function announce() {
     const article = state.current ? getState().articles.find((a) => a.id === state.current) : null;
-    const key = article ? `${article.id}|${state.playing}` : '';
+    const key = article ? `${article.id}|${state.playing}|${state.queue.join(',')}` : '';
     if (key === announced) return;
     announced = key;
-    syncPlayback(article ? { title: article.title, artist: getState().sources.find((s) => s.id === article.sourceId)?.title || '', playing: state.playing } : null);
+    const sourceTitle = (a) => getState().sources.find((s) => s.id === a?.sourceId)?.title || '';
+    const queue = state.queue.map((id) => getState().articles.find((a) => a.id === id)).filter(Boolean).map((a) => ({ id: a.id, title: a.title, artist: sourceTitle(a) }));
+    syncPlayback(article ? { title: article.title, artist: sourceTitle(article), playing: state.playing, position: audio?.currentTime || 0, duration: Number.isFinite(audio?.duration) ? audio.duration : 0, queue } : null);
 }
 const subscribe = (fn) => {
     listeners.add(fn);
@@ -200,6 +202,9 @@ onMedia((action) => {
     if (action === 'toggle') player.toggle();
     else if (action === 'back') player.skip(-15);
     else if (action === 'forward') player.skip(30);
+    else if (action === 'next') player.next();
+    // Un episodio elegido en la pantalla del coche.
+    else if (action?.startsWith('play:')) player.play(action.slice(5));
     else if (action === 'stop') {
         if (audio && !audio.paused) audio.pause();
     }

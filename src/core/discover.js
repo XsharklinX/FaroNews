@@ -1,6 +1,7 @@
 // A partir de lo que el usuario pega (un dominio, una página, un canal, un
 // perfil o un feed), encuentra cómo seguirlo.
 
+import { parseTelegram, telegramFeedUrl } from './extras2.js';
 import { parseFeed } from './feedParser.js';
 import { extractHeadlines, MIN_HEADLINES } from './scrape.js';
 import { resolveUrl, withScheme } from './url.js';
@@ -73,8 +74,10 @@ export function youtubeFeedFromHtml(html) {
 
 const isYouTube = (url) => /(^|\.)youtube\.com$/.test(new URL(url).hostname);
 
-// Lee una fuente ya seguida. `kind` es 'page' para sitios sin feed.
+// Lee una fuente ya seguida. `kind` es 'page' para sitios sin feed y
+// 'telegram' para canales públicos de Telegram.
 export function readSource(text, url, kind) {
+    if (kind === 'telegram') return parseTelegram(text, url);
     if (kind === 'page') {
         const items = extractHeadlines(text, url);
         return items.length ? { title: pageTitle(text), siteUrl: new URL(url).origin, items } : null;
@@ -104,6 +107,20 @@ export async function discoverFeed(input, fetchText, now = Date.now(), wait = (m
         }
         return null;
     };
+
+    // Un canal público de Telegram se lee desde su página pública.
+    const telegram = telegramFeedUrl(start);
+    if (telegram) {
+        let res;
+        try {
+            res = await fetchText(telegram);
+        } catch {
+            throw new Error('UNREACHABLE');
+        }
+        const feed = parseTelegram(res.text, telegram);
+        if (!feed?.items.length) throw new Error('NO_FEED');
+        return { feedUrl: telegram, feed, kind: 'telegram' };
+    }
 
     const known = knownFeeds(start);
     for (const url of known) {

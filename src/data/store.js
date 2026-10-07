@@ -21,7 +21,10 @@ import { MIN_READABLE } from '../core/links.js';
 import { CATALOG_EVERY, newerCatalog } from '../core/catalog.js';
 import bundledCatalog from '../catalog/catalog.json';
 import { CATALOG_URL } from '../config.js';
-import { markSeen, notifyHistory, syncDaily, syncWatcher, takeSavedFromNotifications } from '../ports/background.js';
+import { effective, liveMutes, pauseLabel } from '../core/pause.js';
+import { applyRules, diffLines, isWebSearch, pageLines, paceFactor, textHash, webSearchUrl } from '../core/extras2.js';
+import { looksEnglish } from '../core/lang.js';
+import { canTranslate, markSeen, notifyHistory, setWidget, syncDaily, syncWatcher, takeNotificationActions, translateTexts } from '../ports/background.js';
 import { db } from '../ports/db.js';
 import { tap } from '../ports/haptics.js';
 import { fetchText } from '../ports/http.js';
@@ -48,6 +51,15 @@ const DEFAULT_SETTINGS = {
     autoCopy: true,
     autoCopyAt: 0,
     inboxSeenAt: 0,
+    // Reglas automáticas, escudo contra espóileres y páginas vigiladas.
+    rules: [],
+    spoilers: [],
+    watches: [],
+    // Cuánto tarda el usuario en leer respecto a lo estimado, lectura a lectura.
+    pace: [],
+    // Cambiar los titulares cebo por el dato, y traducir los titulares en inglés.
+    baitFix: true,
+    translateTitles: true,
 };
 const WEEK = 7 * 86400000;
 const REPAIR_EVERY = 86400000;
@@ -89,10 +101,14 @@ let state = {
     pendingOpen: null,
     // Historial de avisos enviados, para la bandeja.
     inbox: [],
+    // Lo que se está silenciando por un tiempo: { kind: 'word' | 'source' | 'topic', key, label }.
+    pausing: null,
     // El catálogo de sitios: el de dentro de la app o uno más nuevo traído de la red.
     catalog: bundledCatalog,
     // Artículo al que se le están poniendo etiquetas.
     tagging: null,
+    // Titulares con posible espóiler que el usuario ya destapó en esta sesión.
+    revealed: new Set(),
     // Cambia cuando se guardan imágenes nuevas, para que las listas se repinten.
     imgTick: 0,
 };
@@ -116,7 +132,8 @@ const newId = () => crypto.randomUUID();
 let watcherTimer;
 function queueWatcherSync() {
     clearTimeout(watcherTimer);
-    watcherTimer = setTimeout(() => syncWatcher(state), 400);
+    // Lo que está en pausa tampoco avisa.
+    watcherTimer = setTimeout(() => syncWatcher(effective(state)), 400);
 }
 
 // Copia automática de lo irrecuperable, fuera de la base de datos: ver
@@ -135,15 +152,37 @@ function patchArticle(id, patch) {
     set({ articles });
     db.put('articles', updated);
     if ('saved' in patch || 'highlights' in patch) queueSnapshot();
+    if ('read' in patch || 'dismissed' in patch) queueWidget();
     return updated;
 }
 
-const todayInput = () => ({ articles: state.articles, sources: state.sources, settings: state.settings, habits: state.habits });
+// Hoy se elige sin los sitios, temas y palabras que el usuario tiene en pausa.
+const todayInput = () => ({ articles: state.articles, habits: state.habits, ...effective(state) });
 
 function rebuildToday() {
     const today = buildToday({ prev: state.today, ...todayInput() });
     set({ today });
     db.setMeta('today', today);
+    queueWidget();
+}
+
+// Widget de la pantalla de inicio: lo que queda de la edición y sus primeros
+// titulares, lo no leído delante. Se avisa a Android con un poco de retraso
+// para juntar los cambios seguidos.
+let widgetTimer;
+function queueWidget() {
+    clearTimeout(widgetTimer);
+    widgetTimer = setTimeout(() => {
+        const byId = new Map(state.articles.map((a) => [a.id, a]));
+        const items = state.today.items.map((it) => byId.get(it.id)).filter(Boolean);
+        const pending = items.filter((a) => !a.read);
+        const minutes = pending.reduce((sum, a) => sum + (a.minutes || 0), 0);
+        setWidget({
+            status: !items.length ? '' : pending.length ? `${items.length - pending.length} de ${items.length} · ${minutes} min` : 'Estás al día',
+            empty: !state.sources.length ? 'Abre Faro y elige los sitios que quieres seguir.' : items.length ? 'Leíste toda la edición. Lo demás puede esperar.' : 'No hay historias nuevas por ahora.',
+            items: pending.slice(0, 3).map((a) => ({ title: a.title, read: false })),
+        });
+    }, 600);
 }
 
 // Aviso breve en la parte baja, con una acción opcional para deshacer.
@@ -164,10 +203,12 @@ function habit(sourceId, kind, amount = 1) {
     queueSnapshot();
 }
 
-function makeSource({ title, siteUrl = '', icon, feedUrl, kind = '', folder = '', level = 'todo', offline = true, priority = false, notify = false, color, perWeek: pace = null, lastOkAt = 0 }) {
+function makeSource({ title, siteUrl = '', icon, feedUrl, kind = '', folder = '', level = 'todo', offline = true, priority = false, notify = false, color, perWeek: pace = null, lastOkAt = 0, country = '' }) {
     return {
         id: newId(),
         title,
+        // País del medio, si viene del catálogo. Si no, se deduce del dominio.
+        country,
         siteUrl,
         // Logo del sitio. Sin definir = todavía no se ha buscado.
         icon,
@@ -238,6 +279,9 @@ function ingest(source, items) {
             continue;
         }
         const article = makeArticle(source.id, item, now);
+        // Reglas automáticas del usuario: guardar, etiquetar, dar por leída o descartar.
+        const ruled = applyRules(state.settings.rules, article.meta);
+        if (ruled) Object.assign(article.meta, ruled, ruled.read ? { readAt: now } : {});
         known.set(key, article.meta);
         added.push(article);
     }
@@ -377,6 +421,88 @@ async function loadCatalog() {
     }
 }
 
+// Titulares en inglés traducidos para las listas. Solo en el teléfono, solo
+// con wifi la primera vez (el idioma pesa unos 30 MB) y de 30 en 30.
+let translating = false;
+async function translateTitles() {
+    if (!canTranslate || translating || state.settings.translateTitles === false) return;
+    const pending = state.articles
+        .filter((a) => !a.titleEs && !a.titleChecked && !a.dismissed && !a.kind)
+        .sort((a, b) => (b.publishedAt || b.fetchedAt) - (a.publishedAt || a.fetchedAt))
+        .slice(0, 60);
+    const english = pending.filter((a) => looksEnglish(`${a.title}. ${a.summary || ''}`)).slice(0, 30);
+    const notEnglish = pending.filter((a) => !english.includes(a));
+    translating = true;
+    try {
+        const out = english.length ? await translateTexts(english.map((a) => a.title), { wifiOnly: true }) : [];
+        const byId = new Map(english.map((a, i) => [a.id, out[i]]));
+        const skip = new Set(notEnglish.map((a) => a.id));
+        const changed = [];
+        set({
+            articles: state.articles.map((a) => {
+                if (byId.get(a.id)) return (changed.push({ ...a, titleEs: byId.get(a.id), titleChecked: true }), changed.at(-1));
+                if (skip.has(a.id)) return (changed.push({ ...a, titleChecked: true }), changed.at(-1));
+                return a;
+            }),
+        });
+        db.putMany('articles', changed);
+    } catch {
+        // Sin wifi o sin el idioma descargado: se intenta en la próxima actualización.
+    } finally {
+        translating = false;
+    }
+}
+
+// Páginas vigiladas: se compara su texto con el de la última vez. Las líneas
+// se guardan aparte (pueden ser cientos); en ajustes queda solo el resumen.
+async function checkWatch(watch) {
+    try {
+        const res = await fetchText(watch.url);
+        const lines = pageLines(res.text);
+        if (!lines.length) throw new Error('La página no tiene texto que comparar');
+        const hash = textHash(lines);
+        const before = (await db.getMeta(`watch:${watch.id}`)) || [];
+        const changed = Boolean(watch.hash) && hash !== watch.hash;
+        if (changed || !watch.hash) await db.setMeta(`watch:${watch.id}`, lines);
+        return { ...watch, hash, checkedAt: Date.now(), error: '', ...(changed ? { changedAt: Date.now(), diff: diffLines(before, lines), seen: false } : {}) };
+    } catch (err) {
+        return { ...watch, checkedAt: Date.now(), error: String(err?.message || err) };
+    }
+}
+async function checkWatches() {
+    const list = state.settings.watches || [];
+    if (!list.length) return;
+    const fresh = [];
+    for (const watch of list) fresh.push(await checkWatch(watch));
+    const now = state.settings.watches || [];
+    actions.setSettings({ watches: now.map((w) => fresh.find((f) => f.id === w.id) || w) });
+}
+
+// Un tema que también busca en toda la web lleva una fuente de búsqueda
+// asociada (Bing Noticias). Se crea, se cambia o se quita con el tema.
+function syncWebTopic(next, prev) {
+    const prevSource = prev?.webSourceId && state.sources.find((s) => s.id === prev.webSourceId);
+    if (!next?.web) {
+        if (prevSource) actions.removeSource(prevSource.id);
+        if (next) delete next.webSourceId;
+        return;
+    }
+    const url = webSearchUrl(next.words?.length ? next.words.join(' OR ') : next.name);
+    if (prevSource && prevSource.feedUrl === url) {
+        next.webSourceId = prevSource.id;
+        if (prevSource.title !== `${next.name} en la web`) saveSource({ ...prevSource, title: `${next.name} en la web` });
+        return;
+    }
+    if (prevSource) actions.removeSource(prevSource.id);
+    const source = makeSource({ title: `${next.name} en la web`, siteUrl: 'https://www.bing.com/news', feedUrl: url, kind: 'web', folder: 'Búsquedas', icon: '' });
+    next.webSourceId = source.id;
+    saveSource(source);
+    refreshOne(source).then(() => {
+        rebuildToday();
+        downloadToday();
+    });
+}
+
 // Cuántas historias traería una edición nueva ahora mismo.
 export function nextEditionCount() {
     return buildToday({ prev: { date: state.today.date, edition: 2, items: [] }, ...todayInput() }).items.length;
@@ -472,8 +598,12 @@ export const actions = {
         // conexión (por ejemplo, tras instalar una versión nueva).
         if (!state.refreshing) downloadToday();
         loadCatalog();
+        // Las pausas de palabras que ya vencieron se retiran; las de sitios y temas caducan solas.
+        if (Object.keys(state.settings.mutedUntil || {}).length !== Object.keys(liveMutes(state.settings.mutedUntil)).length) actions.setSettings({ mutedUntil: liveMutes(state.settings.mutedUntil) });
+        queueWidget();
         // Lo guardado con versiones anteriores también pasa al archivo.
-        pool(state.articles.filter((x) => x.saved && !x.archived && !x.kind), 2, (x) => archive(x.id));
+        pool(state.articles.filter((x) => x.saved && !x.archived && !x.kind && !x.imported), 2, (x) => archive(x.id));
+        translateTitles();
     },
 
     // Al abrir la app o volver a ella: solo actualiza si ya pasó un rato.
@@ -516,7 +646,7 @@ export const actions = {
             .filter((e) => !have.has(urlKey(e.feed)))
             .map((e) => {
                 const busy = (e.perWeek || 0) >= BUSY_PER_WEEK;
-                const source = makeSource({ title: e.name, siteUrl: e.site || '', icon: e.icon, feedUrl: e.feed, kind: e.kind || '', folder: e.folder, level: busy ? 'importante' : 'todo', perWeek: e.perWeek ?? null });
+                const source = makeSource({ title: e.name, siteUrl: e.site || '', icon: e.icon, feedUrl: e.feed, kind: e.kind || '', folder: e.folder, level: busy ? 'importante' : 'todo', perWeek: e.perWeek ?? null, country: e.country || '' });
                 saveSource(source);
                 return { source, busy };
             });
@@ -572,6 +702,8 @@ export const actions = {
             set({ refreshing: false });
         }
         downloadToday();
+        checkWatches();
+        translateTitles();
     },
 
     // Abrir un artículo en el lector: lo marca como leído y cuenta como interés.
@@ -707,10 +839,17 @@ export const actions = {
 
     // Aplica lo que el usuario guardó desde un aviso sin abrir la app.
     async applyNotificationSaves() {
-        const saves = await takeSavedFromNotifications();
-        if (!saves.length) return;
-        const feeds = new Set(saves.map((s) => s.feed).filter(Boolean).map(urlKey));
-        const missing = saves.some((s) => !state.articles.some((a) => a.urlKey === urlKey(s.url)));
+        const { saves, reads, mutes } = await takeNotificationActions();
+        // «Silenciar 1 semana» en el aviso de un tema: la semana cuenta desde que se tocó.
+        for (const mute of mutes) {
+            const topic = (state.settings.topics || []).find((t) => t.name === mute.topic);
+            if (topic) actions.pause({ kind: 'topic', key: topic.id, label: topic.name }, (mute.at || Date.now()) + 7 * 86400000, { quiet: true });
+        }
+        if (mutes.length) queueWatcherSync();
+        const touched = [...saves, ...reads];
+        if (!touched.length) return;
+        const feeds = new Set(touched.map((s) => s.feed).filter(Boolean).map(urlKey));
+        const missing = touched.some((s) => !state.articles.some((a) => a.urlKey === urlKey(s.url)));
         if (missing) {
             await pool(state.sources.filter((s) => feeds.has(urlKey(s.feedUrl))), 4, refreshOne);
             rebuildToday();
@@ -725,6 +864,12 @@ export const actions = {
             }
             done++;
         }
+        // «Ya la vi»: se da por leída sin contarla como interés.
+        for (const read of reads) {
+            const article = state.articles.find((a) => a.urlKey === urlKey(read.url));
+            if (article && !article.read) patchArticle(article.id, { read: true });
+        }
+        if (reads.length) rebuildToday();
         if (done) showToast(done === 1 ? 'Guardada desde un aviso' : `${done} guardadas desde los avisos`);
     },
 
@@ -826,6 +971,7 @@ export const actions = {
             const changed = [];
             set({ articles: state.articles.map((a) => (pending.has(a.id) ? (changed.push({ ...a, read }), changed.at(-1)) : a)) });
             db.putMany('articles', changed);
+            queueWidget();
         };
         apply(true);
         showToast(pending.size === 1 ? 'Marcada como leída' : `${pending.size} marcadas como leídas`, () => apply(false));
@@ -851,6 +997,143 @@ export const actions = {
         return next;
     },
 
+    // Silenciar por un tiempo. `target`: { kind, key, label }; `until`: hasta cuándo.
+    openPause(target) {
+        set({ pausing: target });
+    },
+    closePause() {
+        set({ pausing: null });
+    },
+    pause(target, until, { quiet = false } = {}) {
+        const { kind, key, label } = target;
+        let undo = null;
+        if (kind === 'source') {
+            const source = state.sources.find((s) => s.id === key);
+            if (!source) return;
+            const before = source.pausedUntil || 0;
+            saveSource({ ...source, pausedUntil: until });
+            undo = () => actions.pause(target, before, { quiet: true });
+        } else if (kind === 'topic') {
+            const topics = state.settings.topics || [];
+            if (!topics.some((t) => t.id === key)) return;
+            const before = topics.find((t) => t.id === key).pausedUntil || 0;
+            actions.setSettings({ topics: topics.map((t) => (t.id === key ? { ...t, pausedUntil: until } : t)) });
+            undo = () => actions.pause(target, before, { quiet: true });
+        } else {
+            // Una palabra «hasta que yo lo quite» va con las silenciadas de siempre.
+            const word = key.trim();
+            const before = { muted: state.settings.muted || [], mutedUntil: state.settings.mutedUntil || {} };
+            const timed = { ...before.mutedUntil };
+            delete timed[word];
+            const forever = until >= 8640000000000000;
+            const muted = before.muted.filter((m) => m.toLowerCase() !== word.toLowerCase());
+            if (forever) muted.push(word);
+            else if (until > Date.now()) timed[word] = until;
+            actions.setSettings({ muted, mutedUntil: timed });
+            undo = () => actions.setSettings(before);
+        }
+        rebuildToday();
+        queueWatcherSync();
+        queueSnapshot();
+        if (quiet) return;
+        const text = pauseLabel(until);
+        showToast(text ? `${kind === 'word' ? `«${label}»` : label} en silencio ${text}` : `${kind === 'word' ? `«${label}»` : label} vuelve a contar`, undo);
+    },
+
+    // Páginas vigiladas.
+    async addWatch(url) {
+        const page = await fetchText(url);
+        const lines = pageLines(page.text);
+        if (!lines.length) throw new Error('Esa página no tiene texto que se pueda comparar.');
+        const doc = new DOMParser().parseFromString(page.text, 'text/html');
+        const title = (doc.querySelector('title')?.textContent || new URL(page.url).hostname).replace(/\s+/g, ' ').trim().slice(0, 80);
+        const watch = { id: newId(), url: page.url, title, hash: textHash(lines), checkedAt: Date.now(), changedAt: 0, diff: null, seen: true };
+        await db.setMeta(`watch:${watch.id}`, lines);
+        actions.setSettings({ watches: [...(state.settings.watches || []), watch] });
+        showToast('Faro te avisará cuando cambie');
+        return watch;
+    },
+    removeWatch(id) {
+        actions.setSettings({ watches: (state.settings.watches || []).filter((w) => w.id !== id) });
+        db.setMeta(`watch:${id}`, null);
+    },
+    seeWatch(id) {
+        actions.setSettings({ watches: (state.settings.watches || []).map((w) => (w.id === id ? { ...w, seen: true } : w)) });
+    },
+    checkWatches,
+
+    // Reglas automáticas.
+    saveRule(rule) {
+        const rules = state.settings.rules || [];
+        const clean = { ...rule, id: rule.id || newId() };
+        actions.setSettings({ rules: rules.some((r) => r.id === clean.id) ? rules.map((r) => (r.id === clean.id ? clean : r)) : [...rules, clean] });
+        return clean;
+    },
+    removeRule(id) {
+        actions.setSettings({ rules: (state.settings.rules || []).filter((r) => r.id !== id) });
+    },
+    // Aplica una regla a lo que ya está en Faro. Devuelve cuántos cambió.
+    applyRuleNow(rule) {
+        const changed = [];
+        set({
+            articles: state.articles.map((a) => {
+                const patch = applyRules([rule], a);
+                if (!patch) return a;
+                return (changed.push({ ...a, ...patch }), changed.at(-1));
+            }),
+        });
+        db.putMany('articles', changed);
+        rebuildToday();
+        queueSnapshot();
+        return changed.length;
+    },
+
+    // Lo guardado en Pocket u Omnivore. items: [{ url, title, tags, savedAt, read }].
+    importSaved(items) {
+        const known = new Set(state.articles.map((a) => a.urlKey));
+        const added = [];
+        for (const it of items) {
+            const key = urlKey(it.url);
+            if (known.has(key)) continue;
+            known.add(key);
+            let host = '';
+            try {
+                host = new URL(it.url).hostname.replace(/^www\./, '');
+            } catch {
+                continue;
+            }
+            const article = makeArticle(LOOSE_ID, { url: it.url, title: it.title || host, summary: '', contentHtml: '', fullHtml: '', author: '', image: '', publishedAt: it.savedAt || null }, it.savedAt || Date.now(), {
+                saved: true,
+                read: Boolean(it.read),
+                tags: it.tags || [],
+                site: host,
+                siteUrl: `https://${host}`,
+                // El texto se trae al abrirlo, no todo de golpe.
+                imported: true,
+            });
+            added.push(article);
+        }
+        if (added.length) {
+            set({ articles: [...state.articles, ...added.map((a) => a.meta)] });
+            db.putMany('articles', added.map((a) => a.meta));
+            db.putMany('bodies', added.map((a) => a.body));
+            queueSnapshot();
+        }
+        return { added: added.length, skipped: items.length - added.length };
+    },
+
+    // Cuánto tardó de verdad en leer un artículo, frente a lo estimado.
+    recordPace(ratio) {
+        if (!(ratio > 0.15 && ratio < 4)) return;
+        const samples = [...(state.settings.pace || []), Math.round(ratio * 100) / 100].slice(-40);
+        actions.setSettings({ pace: samples });
+    },
+
+    // Espóileres que el usuario ya decidió ver.
+    reveal(id) {
+        set({ revealed: new Set([...state.revealed, id]) });
+    },
+
     toast: showToast,
     clearToast() {
         clearTimeout(toastTimer);
@@ -867,8 +1150,8 @@ export const actions = {
         set({ settings });
         db.setMeta('settings', settings);
         queueSnapshot();
-        if ('topics' in patch || 'muted' in patch) rebuildToday();
-        if ('topics' in patch || 'muted' in patch || 'notify' in patch) queueWatcherSync();
+        if ('topics' in patch || 'muted' in patch || 'mutedUntil' in patch) rebuildToday();
+        if ('topics' in patch || 'muted' in patch || 'mutedUntil' in patch || 'notify' in patch || 'spoilers' in patch || 'watches' in patch) queueWatcherSync();
         if ('dailyOn' in patch || 'dailyTime' in patch) syncDaily(settings);
     },
     setNotify(patch) {
@@ -881,11 +1164,13 @@ export const actions = {
     saveTopic(topic) {
         const topics = state.settings.topics || [];
         const clean = { notify: true, ...topic, id: topic.id || newId(), name: topic.name.trim(), words: topic.words.map((w) => w.trim()).filter(Boolean) };
+        syncWebTopic(clean, topics.find((t) => t.id === clean.id));
         const exists = topics.some((t) => t.id === clean.id);
         actions.setSettings({ topics: exists ? topics.map((t) => (t.id === clean.id ? clean : t)) : [...topics, clean] });
         return clean;
     },
     removeTopic(id) {
+        syncWebTopic(null, (state.settings.topics || []).find((t) => t.id === id));
         actions.setSettings({ topics: (state.settings.topics || []).filter((t) => t.id !== id) });
     },
 

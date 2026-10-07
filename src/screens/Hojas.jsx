@@ -3,9 +3,12 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { FEEDBACK_EMAIL } from '../config.js';
+import { PAUSES, pauseLabel, pauseUntil } from '../core/pause.js';
 import { actions, useStore } from '../data/store.js';
 import { deviceInfo } from '../ports/background.js';
-import { openExternal, shareText } from '../ports/share.js';
+import { QUOTE_STYLES, quoteImage } from '../ports/quote.js';
+import { wikiSummary } from '../ports/wiki.js';
+import { exportBinary, openExternal, shareText } from '../ports/share.js';
 import { Sheet } from '../ui/bits.jsx';
 import { TagEditor } from '../ui/settings.jsx';
 
@@ -84,6 +87,105 @@ export function FeedbackSheet({ kind, onClose }) {
             <button type="button" className="btn-lamp btn-big" disabled={!ready} onClick={send}>
                 {FEEDBACK_EMAIL ? 'Abrir el correo' : 'Enviar'}
             </button>
+        </Sheet>
+    );
+}
+
+const WHAT = { word: 'No entra en Hoy ni te avisa lo que la mencione.', source: 'Sus historias no entran en Hoy ni te avisan. En Explorar siguen estando.', topic: 'Deja de entrar en Hoy por este tema y de avisarte.' };
+
+// Callar un sitio, un tema o una palabra durante un tiempo. `target` viene de
+// actions.openPause: { kind, key, label }.
+export function PauseSheet({ target }) {
+    const [choice, setChoice] = useState('semana');
+    const until = pauseUntil(choice);
+    const name = target.kind === 'word' ? `«${target.label}»` : target.label;
+    return (
+        <Sheet title={`Silenciar ${name}`} subtitle={WHAT[target.kind]} onClose={actions.closePause}>
+            <div className="pause-list" role="group" aria-label="Durante cuánto tiempo">
+                {PAUSES.map((p) => (
+                    <button key={p.id} type="button" aria-pressed={choice === p.id} onClick={() => setChoice(p.id)}>
+                        <span>{p.label}</span>
+                        {choice === p.id && p.id !== 'siempre' && p.id !== 'dia' && <small>vuelve {pauseLabel(until).replace('hasta ', '')}</small>}
+                    </button>
+                ))}
+            </div>
+            <button
+                type="button"
+                className="btn-lamp btn-big"
+                onClick={() => {
+                    actions.closePause();
+                    actions.pause(target, until);
+                }}
+            >
+                Silenciar
+            </button>
+        </Sheet>
+    );
+}
+
+// Una frase resaltada como imagen, con el titular y la fuente.
+export function QuoteSheet({ text, title, source, onClose }) {
+    const [style, setStyle] = useState(QUOTE_STYLES[0].id);
+    const [image, setImage] = useState('');
+    useEffect(() => {
+        let alive = true;
+        quoteImage({ text, title, source, style }).then((png) => alive && setImage(png));
+        return () => {
+            alive = false;
+        };
+    }, [text, title, source, style]);
+
+    return (
+        <Sheet title="Compartir la frase" subtitle="Una imagen con la cita, el titular y la fuente." onClose={onClose}>
+            <div className="quote-preview">{image && <img src={`data:image/png;base64,${image}`} alt={`Imagen con la cita: ${text}`} />}</div>
+            <div className="choice" role="group" aria-label="Fondo de la imagen">
+                {QUOTE_STYLES.map((s) => (
+                    <button key={s.id} type="button" aria-pressed={style === s.id} onClick={() => setStyle(s.id)}>
+                        {s.label}
+                    </button>
+                ))}
+            </div>
+            <button
+                type="button"
+                className="btn-lamp btn-big"
+                disabled={!image}
+                onClick={async () => {
+                    await exportBinary('faro-cita.png', image);
+                    onClose();
+                }}
+            >
+                Compartir imagen
+            </button>
+        </Sheet>
+    );
+}
+
+// Ficha corta de Wikipedia de lo que el usuario seleccionó en el lector.
+export function WikiSheet({ term, onClose }) {
+    const [page, setPage] = useState(undefined);
+    useEffect(() => {
+        let alive = true;
+        wikiSummary(term).then((found) => alive && setPage(found));
+        return () => {
+            alive = false;
+        };
+    }, [term]);
+
+    return (
+        <Sheet title={page?.title || term} subtitle={page && !page.exact ? `Lo más parecido a «${term}» en Wikipedia` : 'De Wikipedia en español'} onClose={onClose}>
+            {page === undefined && <p className="hint">Buscando…</p>}
+            {page === null && <p className="hint">Wikipedia no tiene una página para «{term}». Prueba a seleccionar solo el nombre.</p>}
+            {page && (
+                <div className="wiki">
+                    {page.image && <img src={page.image} alt="" />}
+                    <p>{page.extract}</p>
+                </div>
+            )}
+            {page && (
+                <button type="button" className="btn-ghost" onClick={() => openExternal(page.url)}>
+                    Leer en Wikipedia
+                </button>
+            )}
         </Sheet>
     );
 }

@@ -8,10 +8,10 @@ import AnadirSheet from './screens/AnadirSheet.jsx';
 import Avisos from './screens/Avisos.jsx';
 import Biblioteca from './screens/Biblioteca.jsx';
 import Catalogo, { catalogBack } from './screens/Catalogo.jsx';
-import { Bandeja, Estadisticas, Gestos } from './screens/Extras.jsx';
+import { Bandeja, Estadisticas, Gestos, Semana } from './screens/Extras.jsx';
 import Fuentes from './screens/Fuentes.jsx';
 import FuenteSheet from './screens/FuenteSheet.jsx';
-import { FeedbackSheet, TagsSheet } from './screens/Hojas.jsx';
+import { FeedbackSheet, PauseSheet, TagsSheet } from './screens/Hojas.jsx';
 import Hoy from './screens/Hoy.jsx';
 import Lector from './screens/Lector.jsx';
 import Lista from './screens/Lista.jsx';
@@ -19,9 +19,11 @@ import Onboarding from './screens/Onboarding.jsx';
 import ShareSheet, { firstUrl } from './screens/ShareSheet.jsx';
 import { CoverageSheet, StoryMenu } from './screens/StoryMenu.jsx';
 import TemaSheet from './screens/TemaSheet.jsx';
+import { Reglas, WatchSheet } from './screens/Vigilar.jsx';
 import Icon from './ui/Icon.jsx';
 import { MiniPlayer, PlayerSheet } from './ui/Player.jsx';
 import { Chrome } from './ui/TopBar.jsx';
+import { setLook } from './ui/look.js';
 import { PullToRefresh, Sheet, Toast } from './ui/bits.jsx';
 import { player, usePlayer } from './data/player.js';
 
@@ -33,7 +35,7 @@ const TABS = [
 ];
 
 export default function App() {
-    const { ready, sources, settings, refreshing, toast, menu, compare, shared, pendingOpen, today, tagging } = useStore();
+    const { ready, sources, settings, refreshing, toast, menu, compare, shared, pendingOpen, today, tagging, pausing } = useStore();
     const playing = usePlayer();
     const [tab, setTab] = useState('hoy');
     const [reader, setReader] = useState(null);
@@ -48,6 +50,9 @@ export default function App() {
     const [siteView, setSiteView] = useState(null);
     const [inboxOpen, setInboxOpen] = useState(false);
     const [statsOpen, setStatsOpen] = useState(false);
+    const [weekOpen, setWeekOpen] = useState(false);
+    const [watchAdd, setWatchAdd] = useState(false);
+    const [rulesOpen, setRulesOpen] = useState(false);
     // Hoja del botón «Añadir» de Fuentes: catálogo, dirección o tema.
     const [addMenu, setAddMenu] = useState(false);
     // 'comentario' o 'sitio': lo que el usuario escribe a quien publica Faro.
@@ -55,6 +60,9 @@ export default function App() {
     // Sube cuando hay que poner el cursor en el buscador de Explorar.
     const [searchFocus, setSearchFocus] = useState(0);
     const chrome = useRef({ onInbox: () => setInboxOpen(true), onSettings: () => setSettingsOpen(true) }).current;
+
+    // Titulares cebo, traducción, espóileres y ritmo de lectura: se aplican al pintar.
+    setLook(settings);
 
     // Tema elegido en Ajustes. «auto» deja decidir al teléfono.
     useEffect(() => {
@@ -95,11 +103,13 @@ export default function App() {
     back.current = () => {
         if (shared) actions.setShared(null);
         else if (playing.open) player.setOpen(false);
+        else if (pausing) actions.closePause();
         else if (tagging) actions.closeTags();
         else if (feedback) setFeedback(null);
         else if (menu) actions.closeMenu();
         else if (compare) actions.closeCompare();
         else if (addMenu) setAddMenu(false);
+        else if (watchAdd) setWatchAdd(false);
         else if (adding) setAdding(false);
         else if (topicEdit) setTopicEdit(null);
         else if (editing) setEditing(null);
@@ -109,6 +119,8 @@ export default function App() {
         }
         else if (topicView) setTopicView(null);
         else if (siteView) setSiteView(null);
+        else if (weekOpen) setWeekOpen(false);
+        else if (rulesOpen) setRulesOpen(false);
         else if (statsOpen) setStatsOpen(false);
         else if (inboxOpen) setInboxOpen(false);
         else if (notifyOpen) setNotifyOpen(false);
@@ -215,7 +227,7 @@ export default function App() {
 
     if (!settings.onboarded && !sources.length && !shared) {
         return (
-            <div className="app">
+            <div className="app solo">
                 <Onboarding />
             </div>
         );
@@ -225,10 +237,10 @@ export default function App() {
         <Chrome.Provider value={chrome}>
         <div className={`app${playing.current ? ' has-player' : ''}`}>
             <PullToRefresh className="main" onRefresh={actions.refreshAll} busy={refreshing && (tab === 'hoy' || tab === 'explorar')}>
-                {tab === 'hoy' && <Hoy onOpen={open} onAdd={() => setAdding(true)} onCatalog={() => setCatalog(true)} onTab={setTab} />}
+                {tab === 'hoy' && <Hoy onOpen={open} onAdd={() => setAdding(true)} onCatalog={() => setCatalog(true)} onTab={setTab} onWeek={() => setWeekOpen(true)} />}
                 {tab === 'explorar' && <Lista mode="todo" onOpen={open} focus={searchFocus} />}
                 {tab === 'biblioteca' && <Biblioteca onOpen={open} />}
-                {tab === 'fuentes' && <Fuentes onCatalog={() => setCatalog(true)} onEdit={setSiteView} onTopicEdit={setTopicEdit} onTopicOpen={setTopicView} />}
+                {tab === 'fuentes' && <Fuentes onCatalog={() => setCatalog(true)} onEdit={setSiteView} onTopicEdit={setTopicEdit} onTopicOpen={setTopicView} onWatch={() => setWatchAdd(true)} />}
             </PullToRefresh>
 
             {tab === 'fuentes' && (
@@ -249,8 +261,10 @@ export default function App() {
                 ))}
             </nav>
 
-            {settingsOpen && <Ajustes onClose={() => setSettingsOpen(false)} onNotify={() => setNotifyOpen(true)} onStats={() => setStatsOpen(true)} onFeedback={() => setFeedback('comentario')} />}
-            {statsOpen && <Estadisticas onClose={() => setStatsOpen(false)} />}
+            {settingsOpen && <Ajustes onClose={() => setSettingsOpen(false)} onNotify={() => setNotifyOpen(true)} onStats={() => setStatsOpen(true)} onFeedback={() => setFeedback('comentario')} onRules={() => setRulesOpen(true)} />}
+            {rulesOpen && <Reglas onClose={() => setRulesOpen(false)} />}
+            {statsOpen && <Estadisticas onClose={() => setStatsOpen(false)} onWeek={() => setWeekOpen(true)} />}
+            {weekOpen && <Semana onClose={() => setWeekOpen(false)} onOpen={open} />}
             {inboxOpen && <Bandeja onClose={() => setInboxOpen(false)} onNotify={() => setNotifyOpen(true)} />}
             {siteView && (
                 <div className="overlay">
@@ -296,7 +310,7 @@ export default function App() {
                             }}
                         >
                             <span>Por su dirección</span>
-                            <span className="sub-s">web, YouTube, podcast…</span>
+                            <span className="sub-s">web, YouTube, podcast, Telegram…</span>
                         </button>
                         <button
                             type="button"
@@ -307,7 +321,18 @@ export default function App() {
                             }}
                         >
                             <span>Un tema</span>
-                            <span className="sub-s">un asunto en todas tus fuentes</span>
+                            <span className="sub-s">un asunto en tus fuentes o en toda la web</span>
+                        </button>
+                        <button
+                            type="button"
+                            className="line-btn"
+                            onClick={() => {
+                                setAddMenu(false);
+                                setWatchAdd(true);
+                            }}
+                        >
+                            <span>Vigilar una página</span>
+                            <span className="sub-s">te avisa cuando cambie</span>
                         </button>
                     </div>
                 </Sheet>
@@ -318,6 +343,8 @@ export default function App() {
             {compare && <CoverageSheet ids={compare} onOpen={open} />}
             {menu && <StoryMenu id={menu} onOpen={openOne} />}
             {tagging && <TagsSheet id={tagging} />}
+            {watchAdd && <WatchSheet onClose={() => setWatchAdd(false)} />}
+            {pausing && <PauseSheet target={pausing} />}
             {feedback && <FeedbackSheet kind={feedback} onClose={() => setFeedback(null)} />}
             {shared && (
                 <ShareSheet

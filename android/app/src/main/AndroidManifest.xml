@@ -45,7 +45,32 @@
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
 
-        <!-- Botón «Guardar para luego» de los avisos. -->
+        <!-- Android Auto: la cola de podcasts en la pantalla del coche. -->
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc" />
+        <service
+            android:name=".FaroMediaService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </service>
+
+        <!-- Widget de Hoy para la pantalla de inicio. -->
+        <receiver
+            android:name=".HoyWidget"
+            android:exported="true"
+            android:label="@string/widget_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_hoy_info" />
+        </receiver>
+
+        <!-- Botones de los avisos: guardar, «ya la vi» y silenciar un tema. -->
         <receiver
             android:name=".NotificationActionReceiver"
             android:exported="false" />

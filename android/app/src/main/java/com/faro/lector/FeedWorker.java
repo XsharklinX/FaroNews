@@ -60,6 +60,9 @@ public class FeedWorker extends Worker {
     static final String CHANNEL_SOURCES = "fuentes";
     static final String ACTION_OPEN = "com.faro.lector.OPEN";
     static final String ACTION_SAVE = "com.faro.lector.SAVE";
+    static final String ACTION_SEEN = "com.faro.lector.SEEN";
+    static final String ACTION_MUTE = "com.faro.lector.MUTE";
+    static final String EXTRA_TOPIC = "topic";
     static final String EXTRA_URL = "url";
     static final String EXTRA_FEED = "feed";
     static final String EXTRA_ID = "notification_id";
@@ -122,6 +125,8 @@ public class FeedWorker extends Worker {
             ensureChannels(context);
             List<Topic> topics = topics(config);
             List<String> muted = words(config.optJSONArray("muted"));
+            List<String> spoilers = words(config.optJSONArray("spoilers"));
+            checkWatches(context, prefs, config.optJSONArray("watches"));
             List<Hit> topicHits = new ArrayList<>();
             List<Object[]> sourceHits = new ArrayList<>();
 
@@ -131,11 +136,12 @@ public class FeedWorker extends Worker {
                 if (!all && topics.isEmpty()) continue;
 
                 String url = feed.optString("url");
-                // Sitio sin feed: se leen los titulares de su portada.
+                // Sitio sin feed: se leen los titulares de su portada. Telegram: su página pública.
                 boolean page = "page".equals(feed.optString("kind"));
+                boolean telegram = "telegram".equals(feed.optString("kind"));
                 List<Item> items;
                 try {
-                    items = page ? fetchPage(url) : fetch(url);
+                    items = telegram ? fetchTelegram(url) : page ? fetchPage(url) : fetch(url);
                 } catch (Exception e) {
                     continue; // Un sitio caído no impide revisar los demás.
                 }
@@ -154,6 +160,12 @@ public class FeedWorker extends Worker {
                     if (seen.contains(item.link)) continue;
                     String text = normalize(item.title + " " + item.text);
                     if (matches(text, muted)) continue;
+                    // Escudo contra espóileres: el aviso llega, pero sin destripar nada.
+                    String spoiler = firstMatch(text, spoilers);
+                    if (spoiler != null) {
+                        item.title = "Posible espóiler de " + spoiler + " · toca para verlo";
+                        item.image = "";
+                    }
                     String topic = matchTopic(text, topics);
                     if (topic != null) {
                         Hit hit = new Hit();
@@ -172,7 +184,7 @@ public class FeedWorker extends Worker {
             // Los temas van primero: son lo que el usuario pidió expresamente.
             for (Hit hit : topicHits) {
                 if (sent >= MAX_PER_RUN) break;
-                postItem(context, CHANNEL_TOPICS, GROUP_TOPICS, "Tema · " + hit.topic, hit.item, hit.feedTitle, hit.feedUrl);
+                postItem(context, CHANNEL_TOPICS, GROUP_TOPICS, "Tema · " + hit.topic, hit.item, hit.feedTitle, hit.feedUrl, hit.topic);
             }
             if (topicHits.size() > 1) postTopicSummary(context, Math.min(topicHits.size(), MAX_PER_RUN));
 
@@ -187,7 +199,7 @@ public class FeedWorker extends Worker {
                 } else {
                     for (Item item : fresh) {
                         if (sent >= MAX_PER_RUN) break;
-                        postItem(context, CHANNEL_SOURCES, "faro_sitio_" + url.hashCode(), title, item, null, url);
+                        postItem(context, CHANNEL_SOURCES, "faro_sitio_" + url.hashCode(), title, item, null, url, null);
                     }
                 }
             }
@@ -402,6 +414,95 @@ public class FeedWorker extends Worker {
         }
     }
 
+    /** La primera palabra de la lista que aparece en el texto, o null. */
+    private static String firstMatch(String normalizedText, List<String> words) {
+        for (String word : words) {
+            List<String> one = new ArrayList<>();
+            one.add(word);
+            if (matches(normalizedText, one)) return word;
+        }
+        return null;
+    }
+
+    // --- Canales públicos de Telegram ----------------------------------------
+
+    private static final Pattern TG_POST = Pattern.compile("data-post=\"([^\"]+)\"");
+    private static final Pattern TG_TEXT = Pattern.compile("class=\"tgme_widget_message_text[^\"]*\"[^>]*>(.*?)</div>", Pattern.DOTALL);
+    private static final Pattern TG_PHOTO = Pattern.compile("tgme_widget_message_photo_wrap[^>]*background-image:url\\('([^']+)'\\)");
+
+    /** Mismas reglas que parseTelegram() de src/core/extras2.js, sin árbol DOM. */
+    private static List<Item> fetchTelegram(String address) throws Exception {
+        String html = readText(address);
+        List<Item> items = new ArrayList<>();
+        String[] posts = html.split("class=\"tgme_widget_message_wrap");
+        for (int i = 1; i < posts.length; i++) {
+            String post = posts[i];
+            Matcher id = TG_POST.matcher(post);
+            if (!id.find()) continue;
+            Item item = new Item();
+            item.link = "https://t.me/" + id.group(1);
+            Matcher text = TG_TEXT.matcher(post);
+            String plain = text.find() ? HtmlCompat.fromHtml(text.group(1), HtmlCompat.FROM_HTML_MODE_LEGACY).toString().trim() : "";
+            Matcher photo = TG_PHOTO.matcher(post);
+            if (photo.find()) item.image = photo.group(1);
+            if (plain.isEmpty() && item.image.isEmpty()) continue;
+            String first = plain.split("\n|(?<=[.!?])\\s")[0].trim();
+            item.title = first.isEmpty() ? "Foto" : first.length() > 120 ? first.substring(0, 117) + "…" : first;
+            item.text = plain;
+            items.add(item);
+        }
+        return items;
+    }
+
+    // --- Páginas vigiladas ---------------------------------------------------
+
+    private static final Pattern TAGS = Pattern.compile("<(script|style|noscript|svg|nav|header|footer)\\b.*?</\\1>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+
+    /** Avisa de las páginas vigiladas cuyo texto cambió desde la última vez. */
+    private void checkWatches(Context context, SharedPreferences prefs, JSONArray watches) {
+        if (watches == null) return;
+        for (int i = 0; i < watches.length(); i++) {
+            JSONObject watch = watches.optJSONObject(i);
+            if (watch == null) continue;
+            String url = watch.optString("url");
+            try {
+                String text = HtmlCompat.fromHtml(TAGS.matcher(readText(url)).replaceAll(" "), HtmlCompat.FROM_HTML_MODE_LEGACY).toString().replaceAll("\\s+", " ").trim();
+                String hash = Integer.toHexString(text.hashCode());
+                String key = "watch:" + url;
+                String before = prefs.getString(key, null);
+                prefs.edit().putString(key, hash).apply();
+                if (before == null || before.equals(hash)) continue;
+                Item item = new Item();
+                item.link = url;
+                item.title = "Cambió: " + watch.optString("title");
+                postItem(context, CHANNEL_SOURCES, "faro_paginas", "Página vigilada", item, null, null, null);
+            } catch (Exception ignored) {
+                // Página caída: se vuelve a mirar en la próxima revisión.
+            }
+        }
+    }
+
+    /** El HTML de una dirección, como texto, con su codificación. */
+    private static String readText(String address) throws Exception {
+        HttpURLConnection conn = open(address);
+        try (InputStream in = conn.getInputStream()) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buffer = new byte[16384];
+            int read;
+            while ((read = in.read(buffer)) > 0 && out.size() < MAX_PAGE_BYTES) out.write(buffer, 0, read);
+            Charset charset = Charset.forName("UTF-8");
+            Matcher declared = CHARSET.matcher(String.valueOf(conn.getContentType()));
+            try {
+                if (declared.find()) charset = Charset.forName(declared.group(1));
+            } catch (Exception ignored) {
+                // Codificación desconocida: se lee como UTF-8.
+            }
+            return new String(out.toByteArray(), charset);
+        } finally {
+            conn.disconnect();
+        }
+    }
+
     // --- Sitios sin feed -----------------------------------------------------
 
     private static final Pattern ANCHOR = Pattern.compile("<a\\b[^>]*\\bhref=[\"']([^\"'#]+)[\"'][^>]*>(.*?)</a>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
@@ -538,8 +639,24 @@ public class FeedWorker extends Worker {
         }
     }
 
-    /** Un aviso por noticia: titular, foto si la hay, y «Guardar» sin abrir la app. */
-    private void postItem(Context context, String channel, String group, String heading, Item item, String subText, String feedUrl) {
+    /** Un botón de un aviso: lo recoge NotificationActionReceiver sin abrir la app. */
+    private static PendingIntent actionIntent(Context context, String action, int id, Item item, String feedUrl, String topic) {
+        Intent intent = new Intent(context, NotificationActionReceiver.class);
+        intent.setAction(action);
+        // La dirección distingue un botón de otro: sin ella Android los confunde.
+        intent.setData(Uri.parse("faro://aviso/" + action + "/" + id));
+        intent.putExtra(EXTRA_URL, item.link);
+        intent.putExtra(EXTRA_FEED, feedUrl);
+        intent.putExtra(EXTRA_ID, id);
+        if (topic != null) intent.putExtra(EXTRA_TOPIC, topic);
+        return PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    /**
+     * Un aviso por noticia: titular, foto si la hay y sus botones. `topic` es
+     * el tema por el que avisa, o null si avisa por el sitio.
+     */
+    private void postItem(Context context, String channel, String group, String heading, Item item, String subText, String feedUrl, String topic) {
         int id = item.link.hashCode();
 
         Intent save = new Intent(context, NotificationActionReceiver.class);
@@ -555,7 +672,10 @@ public class FeedWorker extends Worker {
             .setContentText(item.title)
             .setContentIntent(openIntent(context, item.link, feedUrl, id))
             .setGroup(group)
-            .addAction(0, "Guardar para luego", saveIntent);
+            .addAction(0, "Guardar", saveIntent)
+            .addAction(0, "Ya la vi", actionIntent(context, ACTION_SEEN, id, item, feedUrl, null));
+        // Android enseña tres botones como mucho: el tercero, solo en los avisos de un tema.
+        if (topic != null) builder.addAction(0, "Silenciar 1 semana", actionIntent(context, ACTION_MUTE, id, item, feedUrl, topic));
         if (subText != null && !subText.isEmpty()) builder.setSubText(subText);
 
         Bitmap picture = images < MAX_IMAGES ? loadImage(item.image) : null;

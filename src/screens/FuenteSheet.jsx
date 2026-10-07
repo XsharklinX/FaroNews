@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { canWatch, DEFAULT_NOTIFY } from '../core/notify.js';
+import { isPaused, pauseLabel } from '../core/pause.js';
 import { agoLabel } from '../core/text.js';
 import { actions, isFailing, useStore } from '../data/store.js';
 import { askPermission } from '../ports/background.js';
@@ -104,6 +105,19 @@ export default function FuenteSheet({ id, onClose, onNotify }) {
             </Group>
 
             <Group>
+                {isPaused(source.pausedUntil) ? (
+                    <Row icon="play" title="Reanudar" value={`en pausa ${pauseLabel(source.pausedUntil)}`} onClick={() => actions.pause({ kind: 'source', key: id, label: source.title }, 0)} />
+                ) : (
+                    <Row
+                        icon="pausa"
+                        title="Pausar un tiempo"
+                        value="sin Hoy ni avisos"
+                        onClick={() => {
+                            onClose();
+                            actions.openPause({ kind: 'source', key: id, label: source.title });
+                        }}
+                    />
+                )}
                 <Row icon="actualizar" title="Actualizar ahora" onClick={() => actions.refreshSource(id)} />
                 {source.siteUrl && <Row icon="abrir" title="Abrir el sitio" value={hostOf(source.siteUrl)} onClick={() => openExternal(source.siteUrl)} />}
                 {!confirming && <Row icon="cerrar" title="Dejar de seguir" danger onClick={() => setConfirming(true)} />}

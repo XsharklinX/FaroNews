@@ -132,10 +132,12 @@ public class FaroBackgroundPlugin extends Plugin {
         JSObject result = new JSObject();
         try {
             result.put("saves", new JSONArray(prefs().getString(NotificationActionReceiver.PENDING_SAVES, "[]")));
+            result.put("reads", new JSONArray(prefs().getString(NotificationActionReceiver.PENDING_READS, "[]")));
+            result.put("mutes", new JSONArray(prefs().getString(NotificationActionReceiver.PENDING_MUTES, "[]")));
         } catch (Exception e) {
             result.put("saves", new JSONArray());
         }
-        prefs().edit().remove(NotificationActionReceiver.PENDING_SAVES).apply();
+        prefs().edit().remove(NotificationActionReceiver.PENDING_SAVES).remove(NotificationActionReceiver.PENDING_READS).remove(NotificationActionReceiver.PENDING_MUTES).apply();
         call.resolve(result);
     }
 
@@ -237,6 +239,9 @@ public class FaroBackgroundPlugin extends Plugin {
         intent.putExtra(PlaybackService.EXTRA_TITLE, call.getString("title", "Faro"));
         intent.putExtra(PlaybackService.EXTRA_ARTIST, call.getString("artist", ""));
         intent.putExtra(PlaybackService.EXTRA_PLAYING, Boolean.TRUE.equals(call.getBoolean("playing", false)));
+        // La misma información para la pantalla de bloqueo y Android Auto.
+        MediaHub.update(getContext(), call.getString("title", "Faro"), call.getString("artist", ""), Boolean.TRUE.equals(call.getBoolean("playing", false)),
+            (long) (call.getDouble("position", 0d) * 1000), (long) (call.getDouble("duration", 0d) * 1000), call.getArray("queue"));
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getContext().startForegroundService(intent);
             else getContext().startService(intent);
@@ -248,7 +253,16 @@ public class FaroBackgroundPlugin extends Plugin {
 
     @PluginMethod
     public void playbackStop(PluginCall call) {
+        MediaHub.stop(getContext());
         getContext().stopService(new Intent(getContext(), PlaybackService.class));
+        call.resolve();
+    }
+
+    /** Lo que enseña el widget de Hoy: { status, empty, items: [{ title, read }] }. */
+    @PluginMethod
+    public void setWidget(PluginCall call) {
+        prefs().edit().putString(HoyWidget.DATA, call.getData().toString()).apply();
+        HoyWidget.refresh(getContext());
         call.resolve();
     }
 
@@ -297,7 +311,8 @@ public class FaroBackgroundPlugin extends Plugin {
         TranslatorOptions options = new TranslatorOptions.Builder().setSourceLanguage(TranslateLanguage.ENGLISH).setTargetLanguage(TranslateLanguage.SPANISH).build();
         Translator translator = Translation.getClient(options);
         translator
-            .downloadModelIfNeeded(new DownloadConditions.Builder().build())
+            // Los titulares de las listas se traducen solo si el idioma ya está o hay wifi.
+            .downloadModelIfNeeded(Boolean.TRUE.equals(call.getBoolean("wifiOnly", false)) ? new DownloadConditions.Builder().requireWifi().build() : new DownloadConditions.Builder().build())
             .addOnSuccessListener(done -> translateNext(translator, texts, 0, new JSArray(), call))
             .addOnFailureListener(error -> {
                 translator.close();

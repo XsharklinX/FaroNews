@@ -26,9 +26,13 @@ export function watcherConfig(sources, settings) {
         enabled: Boolean(notify.on),
         everyMinutes: notify.every,
         quiet: { on: Boolean(notify.quietOn), from: notify.quietFrom, to: notify.quietTo },
-        feeds: sources.filter(canWatch).map((s) => ({ url: s.feedUrl, title: s.title, notify: Boolean(s.notify), ...(s.kind === 'page' ? { kind: 'page' } : {}) })),
+        feeds: sources.filter(canWatch).map((s) => ({ url: s.feedUrl, title: s.title, notify: Boolean(s.notify), ...(s.kind === 'page' || s.kind === 'telegram' ? { kind: s.kind } : {}) })),
         topics,
         muted: settings.muted || [],
+        // Lo que el usuario no quiere que le destripen: el aviso no enseña el titular.
+        spoilers: settings.spoilers || [],
+        // Páginas que no son noticias: avisar cuando cambien.
+        watches: (settings.watches || []).map((w) => ({ id: w.id, url: w.url, title: w.title })),
     };
 }
 

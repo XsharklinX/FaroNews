@@ -32,6 +32,8 @@ describe('watcherConfig', () => {
                 { name: 'Godot', words: ['Godot'] },
             ],
             muted: ['fútbol'],
+            spoilers: [],
+            watches: [],
         });
     });
 

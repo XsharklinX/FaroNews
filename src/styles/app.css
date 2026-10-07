@@ -647,3 +647,71 @@ button:disabled { opacity: 0.45; cursor: default; }
 .reader-chips .tab-chip { white-space: normal; text-align: center; }
 .reader-note { padding-bottom: 14px; }
 .search.lone { margin-top: 14px; }
+
+/* Silenciar por un tiempo, frase como imagen y resumen de la semana. */
+.pause-list { display: flex; flex-direction: column; gap: 8px; }
+.pause-list button { min-height: 50px; padding: 0 16px; border: 1px solid var(--line); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 15px; font-weight: 500; }
+.pause-list button[aria-pressed='true'] { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); font-weight: 700; }
+.pause-list small { font-size: 12.5px; font-weight: 400; color: var(--ink2); }
+.quote-preview { align-self: center; width: min(100%, 250px); aspect-ratio: 4 / 5; border-radius: 12px; overflow: hidden; background: var(--wash); border: 1px solid var(--line); }
+.quote-preview img { display: block; width: 100%; height: 100%; }
+.week-entry { border-bottom: 1px solid var(--line); }
+.bars.week { height: 120px; }
+
+/* Escudo contra espóileres: el titular y la foto se ven borrosos hasta tocarlos. */
+.spoiler .story-title, .spoiler h2, .spoiler .story-thumb, .spoiler .lead-img { filter: blur(6px); user-select: none; }
+.spoiler .story-meta > span:last-child { color: var(--ink); }
+
+/* De qué países son los medios que cuentan una historia. */
+.mix { display: flex; flex-direction: column; gap: 8px; }
+.mix-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 2px; }
+.mix-bar i { display: block; height: 10px; min-width: 6px; }
+.mix-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--ink2); }
+.mix-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.mix-legend i { width: 9px; height: 9px; border-radius: 3px; border: 1px solid var(--line); }
+.mix-note { margin: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--lamp); font-size: 13px; color: var(--ink); }
+
+/* La historia en el tiempo, al pie del artículo. */
+.history { margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--line); }
+.history .label { margin-bottom: 8px; }
+.tl-list { list-style: none; margin: 0; padding: 0 0 0 18px; position: relative; }
+.tl-list::before { content: ""; position: absolute; left: 4px; top: 10px; bottom: 10px; width: 2px; background: var(--line); }
+.tl-list li { position: relative; }
+.tl-list li::before { content: ""; position: absolute; left: -18px; top: 12px; width: 10px; height: 10px; border-radius: 50%; background: var(--bg); border: 2px solid var(--ink3); }
+.tl-list li.now::before { background: var(--lamp); border-color: var(--lamp); }
+.tl-list li > button, .tl-list li.now { width: 100%; display: flex; flex-direction: column; gap: 2px; padding: 8px 0; }
+.tl-title { font-family: var(--font-read); font-size: 16px; line-height: 1.25; font-weight: 600; }
+.tl-list li.now .tl-title { color: var(--ink2); }
+/* Ficha de Wikipedia */
+.wiki { display: flex; gap: 14px; align-items: flex-start; }
+.wiki img { flex: none; width: 84px; height: 84px; border-radius: 10px; object-fit: cover; background: var(--wash); }
+.wiki p { margin: 0; font-family: var(--font-read); font-size: 16px; line-height: 1.45; }
+
+/* Páginas vigiladas y reglas */
+.watch-main { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px var(--gutter); }
+.watch.fresh .src-text strong { color: var(--ink); }
+.watch-body { padding: 0 var(--gutter) 14px; display: flex; flex-direction: column; gap: 10px; }
+.diff { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; }
+.diff p { margin: 0; overflow-wrap: anywhere; }
+.diff .add { color: var(--ok); }
+.diff .del { color: var(--warn); text-decoration: line-through; }
+.tab-dot { display: inline-block; margin-left: 5px; vertical-align: 2px; }
+.pad-x { padding: 12px var(--gutter) 0; }
+.rule-step { font: 600 13px var(--font-ui); color: var(--ink2); text-transform: uppercase; letter-spacing: 0.06em; }
+.rule-text { flex: 1; min-width: 0; text-align: left; font-size: 14.5px; line-height: 1.35; }
+.select { min-height: 46px; border: 1px solid var(--line); border-radius: 10px; padding: 0 10px; background: var(--bg); color: var(--ink); font-size: 15px; }
+
+/* Tablet y plegables abiertos: la lista a la izquierda y lo que se abre
+   (artículo, ajustes, catálogo) a la derecha, como un periódico abierto. */
+@media (min-width: 840px) {
+    :root { --list-w: min(42vw, 480px); }
+    .app { max-width: none; }
+    .app > .main, .app > .nav, .app > .mini, .app > .fab-holder { width: var(--list-w); border-right: 1px solid var(--line); }
+    .app > .reader, .app > .overlay { left: var(--list-w); animation: none; }
+    .app:not(.solo)::after { content: "Elige una historia para leerla aquí"; position: absolute; top: 0; bottom: 0; right: 0; left: var(--list-w); display: flex; align-items: center; justify-content: center; font-family: var(--font-read); font-size: 22px; color: var(--ink3); pointer-events: none; z-index: 0; }
+    .reader-scroll { padding-inline: max(36px, calc((100% - 680px) / 2)); --rm: max(36px, calc((100% - 680px) / 2)); }
+    .overlay > .screen { max-width: 760px; margin-inline: auto; }
+    .sheet-wrap { align-items: center; }
+    .sheet { width: min(100%, 560px); border-radius: 16px 16px 0 0; }
+    .toast { right: auto; width: calc(var(--list-w) - 28px); }
+}

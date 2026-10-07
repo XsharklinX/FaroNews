@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="faro_bg">#0C0E12</color>
+    <color name="widget_bg">#171A20</color>
+    <color name="widget_ink">#EDEFF2</color>
+    <color name="widget_ink2">#A0A8B3</color>
+    <color name="widget_ink3">#6F7783</color>
 </resources>

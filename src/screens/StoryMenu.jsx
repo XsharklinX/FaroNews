@@ -1,6 +1,7 @@
 // Menú de una historia (pulsación larga) y hoja para comparar cómo titula
 // cada fuente la misma noticia.
 
+import { COUNTRY_NAMES, countryMix, countryOf } from '../core/extras2.js';
 import { relTime } from '../core/text.js';
 import { titleWords } from '../core/today.js';
 import { actions, sourceOf, useStore } from '../data/store.js';
@@ -52,10 +53,11 @@ export function StoryMenu({ id, onOpen }) {
 
             <Group title="Afinar Hoy">
                 {!source.loose && <Row icon="subir" flip title={`Menos de ${source.title}`} value="baja su nivel" onClick={run(() => actions.lessOf(source.id))} />}
-                <Row icon="silenciar" title="Silenciar una palabra" value="no vuelve a Hoy">
+                {!source.loose && <Row icon="pausa" title={`Pausar ${source.title}`} value="un día, una semana…" onClick={run(() => actions.openPause({ kind: 'source', key: source.id, label: source.title }))} />}
+                <Row icon="silenciar" title="Silenciar una palabra" value="eliges cuánto tiempo">
                     <div className="chips">
                         {words.map((w) => (
-                            <button key={w} type="button" className="chip-btn" onClick={run(() => actions.muteWord(w))}>
+                            <button key={w} type="button" className="chip-btn" onClick={run(() => actions.openPause({ kind: 'word', key: w, label: w }))}>
                                 {w}
                             </button>
                         ))}
@@ -89,16 +91,39 @@ export function StoryMenu({ id, onOpen }) {
 }
 
 export function CoverageSheet({ ids, onOpen }) {
-    const { articles, sources } = useStore();
+    const { articles, sources, catalog } = useStore();
     const rows = ids
         .map((id) => articles.find((a) => a.id === id))
         .filter(Boolean)
         .map((article) => ({ article, source: sources.find((s) => s.id === article.sourceId) }))
         .filter((r) => r.source);
     const close = actions.closeCompare;
+    // De qué países son los medios que la cuentan.
+    const mix = countryMix(rows.map((r) => r.source), catalog);
+    const known = mix.filter((m) => m.id !== '?');
+    const total = rows.length;
+    const SHADES = ['var(--ink)', 'var(--lamp)', 'var(--ink3)', 'var(--line)'];
 
     return (
         <Sheet title="Cómo lo cuentan" subtitle={`${rows.length} de tus fuentes publicaron esta historia.`} onClose={close}>
+            {known.length > 0 && (
+                <div className="mix">
+                    <div className="mix-bar" role="img" aria-label={mix.map((m) => `${m.name}: ${m.count}`).join(', ')}>
+                        {mix.map((m, i) => (
+                            <i key={m.id} style={{ width: `${(m.count / total) * 100}%`, background: SHADES[Math.min(i, SHADES.length - 1)] }} />
+                        ))}
+                    </div>
+                    <div className="mix-legend">
+                        {mix.map((m, i) => (
+                            <span key={m.id}>
+                                <i style={{ background: SHADES[Math.min(i, SHADES.length - 1)] }} />
+                                {m.name} {m.count}
+                            </span>
+                        ))}
+                    </div>
+                    {known.length === 1 && mix.length === 1 && total > 1 && <p className="mix-note">Todas tus fuentes que la cuentan son de {known[0].name}. Puede faltar otra mirada.</p>}
+                </div>
+            )}
             <div className="rows">
                 {rows.map(({ article, source }) => (
                     <button
@@ -116,7 +141,7 @@ export function CoverageSheet({ ids, onOpen }) {
                     >
                         <span className="story-meta">
                             <Monogram source={source} size={22} />
-                            <span>{[source.title, relTime(article.publishedAt || article.fetchedAt), `${article.minutes} min`].filter(Boolean).join(' · ')}</span>
+                            <span>{[source.title, COUNTRY_NAMES[countryOf(source, catalog)] || '', relTime(article.publishedAt || article.fetchedAt), `${article.minutes} min`].filter(Boolean).join(' · ')}</span>
                         </span>
                         <span className="story-title">{article.title}</span>
                         {article.summary && <span className="cover-sum">{article.summary}</span>}

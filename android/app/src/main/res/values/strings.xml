@@ -12,4 +12,6 @@
     <string name="shortcut_guardado_long">Abrir lo guardado</string>
     <string name="shortcut_anadir">Añadir sitio</string>
     <string name="shortcut_anadir_long">Añadir un sitio</string>
+    <string name="widget_title">Hoy</string>
+    <string name="widget_description">Los primeros titulares de tu edición de hoy</string>
 </resources>

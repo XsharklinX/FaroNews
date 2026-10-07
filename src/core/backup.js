@@ -10,8 +10,8 @@ import { urlKey } from './url.js';
 export const BACKUP_FORMAT = 'faro-backup';
 export const BACKUP_VERSION = 1;
 
-const SOURCE_FIELDS = ['title', 'siteUrl', 'icon', 'feedUrl', 'kind', 'folder', 'level', 'offline', 'priority', 'notify', 'color', 'perWeek'];
-const ARTICLE_FIELDS = ['url', 'title', 'summary', 'author', 'image', 'publishedAt', 'fetchedAt', 'minutes', 'kind', 'audio', 'duration', 'read', 'saved', 'highlights', 'pos', 'site', 'tags'];
+const SOURCE_FIELDS = ['title', 'siteUrl', 'icon', 'feedUrl', 'kind', 'folder', 'level', 'offline', 'priority', 'notify', 'color', 'perWeek', 'pausedUntil'];
+const ARTICLE_FIELDS = ['url', 'title', 'summary', 'author', 'image', 'publishedAt', 'fetchedAt', 'minutes', 'kind', 'audio', 'duration', 'read', 'saved', 'highlights', 'pos', 'site', 'tags', 'imported'];
 const pick = (obj, fields) => Object.fromEntries(fields.filter((f) => obj[f] !== undefined).map((f) => [f, obj[f]]));
 
 // bodies: Map id -> { contentHtml, fullHtml } de los artículos que se guardan.
